@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pg_isready)",
+      "Bash(npm install:*)",
+      "Read(//private/tmp/**)",
+      "Bash(npm run:*)",
+      "Bash(curl -s -X POST http://localhost:3001/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"demo@qrmenu.app\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"password123\"\"\"\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGNkNTg2YS1jMzRmLTQ1N2ItOGE2Yy00MTcxMzczYmRjMzAiLCJlbWFpbCI6ImRlbW9AcXJtZW51LmFwcCIsImlhdCI6MTc3NDM3NTg2NiwiZXhwIjoxNzc0OTgwNjY2fQ.4jZ8Z9pe953_z6mdamrFezu-pLFVLcIc9QhDQgqcVuA\" BUSINESS_ID=\"34d7453e-dbb5-4c7a-acc6-78a4bc1b0600\" MENU_ID=\"bc9a2a33-4ae9-4d37-90df-ee23f5b32328\" __NEW_LINE_4a847d5f85ef8944__ curl -s \"http://localhost:3001/api/menus/$MENU_ID/categories\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGNkNTg2YS1jMzRmLTQ1N2ItOGE2Yy00MTcxMzczYmRjMzAiLCJlbWFpbCI6ImRlbW9AcXJtZW51LmFwcCIsImlhdCI6MTc3NDM3NTg2NiwiZXhwIjoxNzc0OTgwNjY2fQ.4jZ8Z9pe953_z6mdamrFezu-pLFVLcIc9QhDQgqcVuA\" BUSINESS_ID=\"34d7453e-dbb5-4c7a-acc6-78a4bc1b0600\" MENU_ID=\"bc9a2a33-4ae9-4d37-90df-ee23f5b32328\" __NEW_LINE_7c1eaa77ba0cbe14__ curl -s \"http://localhost:3001/api/businesses/$BUSINESS_ID/menus/$MENU_ID\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(PSQL=/Users/Shared/DBngin/postgresql/17.0/bin/psql)",
+      "Bash($PSQL -h localhost -p 5432 -U postgres -d qrmenu -c \":*)",
+      "Bash(head -5 grep \"slot\\\\|renderSlot\\\\|#item\" /Users/handemugekeser/Sites/qrmenu/frontend/node_modules/vue-draggable-plus/dist/index.mjs)",
+      "Bash(grep -r upload /Users/handemugekeser/Sites/qrmenu/backend/src --include=*.ts)",
+      "Bash(grep -r \"FormData\\\\|@UseInterceptors\\\\|FileInterceptor\" /Users/handemugekeser/Sites/qrmenu --include=*.ts --include=*.tsx --include=*.vue)",
+      "Bash(grep -r \"name: ''dashboard''\\\\|to=\"\"/\"\"\\\\|push\\(''/''\\)\\\\|path: ''/''\" /Users/handemugekeser/Sites/qrmenu/frontend/src --include=\"*.vue\" --include=\"*.ts\" -l)",
+      "Bash(grep -n \"name: ''dashboard''\\\\|to=\"\"/\"\"\\\\|push\\(''/''\\)\\\\|push\\({ name\" /Users/handemugekeser/Sites/qrmenu/frontend/src/components/layout/DashboardLayout.vue /Users/handemugekeser/Sites/qrmenu/frontend/src/views/auth/RegisterView.vue /Users/handemugekeser/Sites/qrmenu/frontend/src/stores/auth.ts)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(npx vite:*)"
+    ]
+  }
+}

@@ -1,0 +1,236 @@
+// QRmenu - Prisma Schema
+// Production-ready database design
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum Language {
+  TR
+  EN
+  AR
+}
+
+enum DeviceType {
+  MOBILE
+  TABLET
+  DESKTOP
+  UNKNOWN
+}
+
+// ─────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  name         String
+  plan         SubscriptionPlan @default(FREE)
+  planExpiresAt DateTime?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  businesses   Business[]
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// BUSINESSES
+// ─────────────────────────────────────────
+
+model Business {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  slug        String   @unique
+  description String?
+  phone       String?
+  address     String?
+  logoUrl     String?
+  coverUrl    String?
+  currency    String   @default("TRY")
+  defaultLang Language @default(TR)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menus       Menu[]
+  @@map("businesses")
+}
+
+// ─────────────────────────────────────────
+// MENUS
+// ─────────────────────────────────────────
+
+model Menu {
+  id           String   @id @default(uuid())
+  businessId   String
+  name         String
+  description  String?
+  isActive     Boolean  @default(false)
+  isDefault    Boolean  @default(false)
+  themeColor   String   @default("#FF6B35")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business     Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  categories   Category[]
+  qrCodes      QrCode[]
+  analytics    Analytics[]
+  @@map("menus")
+}
+
+// ─────────────────────────────────────────
+// CATEGORIES
+// ─────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(uuid())
+  menuId      String
+  name        String
+  description String?
+  imageUrl    String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  menu         Menu          @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  products     Product[]
+  translations Translation[]
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────
+// PRODUCTS
+// ─────────────────────────────────────────
+
+model Product {
+  id           String   @id @default(uuid())
+  categoryId   String
+  name         String
+  description  String?
+  imageUrl     String?
+  basePrice    Decimal  @db.Decimal(10, 2)
+  calories     Int?
+  allergens    String[]
+  isAvailable  Boolean  @default(true)
+  isPopular    Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  variants     Variant[]
+  extras       Extra[]
+  translations Translation[]
+  @@map("products")
+}
+
+// ─────────────────────────────────────────
+// VARIANTS
+// ─────────────────────────────────────────
+
+model Variant {
+  id        String  @id @default(uuid())
+  productId String
+  name      String
+  price     Decimal @db.Decimal(10, 2)
+  isDefault Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@map("variants")
+}
+
+// ─────────────────────────────────────────
+// EXTRAS
+// ─────────────────────────────────────────
+
+model Extra {
+  id        String  @id @default(uuid())
+  productId String
+  name      String
+  price     Decimal @db.Decimal(10, 2) @default(0)
+  isRequired Boolean @default(false)
+  maxSelect Int     @default(1)
+  sortOrder Int     @default(0)
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@map("extras")
+}
+
+// ─────────────────────────────────────────
+// TRANSLATIONS
+// ─────────────────────────────────────────
+
+model Translation {
+  id         String   @id @default(uuid())
+  entityType String   // 'category' | 'product'
+  entityId   String
+  categoryId String?
+  productId  String?
+  language   Language
+  field      String   // 'name' | 'description'
+  value      String
+
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([entityType, entityId, language, field])
+  @@map("translations")
+}
+
+// ─────────────────────────────────────────
+// QR CODES
+// ─────────────────────────────────────────
+
+model QrCode {
+  id          String   @id @default(uuid())
+  menuId      String
+  label       String?  // e.g. "Table 1"
+  tableNumber Int?
+  url         String
+  imageUrl    String?
+  scanCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  @@map("qr_codes")
+}
+
+// ─────────────────────────────────────────
+// ANALYTICS
+// ─────────────────────────────────────────
+
+model Analytics {
+  id         String     @id @default(uuid())
+  menuId     String
+  deviceType DeviceType @default(UNKNOWN)
+  userAgent  String?
+  ipAddress  String?
+  tableNumber Int?
+  createdAt  DateTime   @default(now())
+
+  menu       Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  @@map("analytics")
+}
