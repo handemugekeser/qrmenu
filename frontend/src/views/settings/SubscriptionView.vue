@@ -1,15 +1,15 @@
 <template>
   <div class="p-6 lg:p-8 space-y-8">
     <div>
-      <h1 class="text-2xl font-black text-gray-900">Abonelik</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Abonelik</h1>
       <p class="text-gray-500 mt-1">Planınızı yönetin</p>
     </div>
 
     <!-- Current Plan Banner -->
-    <div class="card p-6 bg-linear-to-br from-orange-50 to-amber-50 border-orange-100 flex items-center justify-between gap-4">
+    <div class="card p-6 bg-[#768dfb]/5 border-[#768dfb]/20 flex items-center justify-between gap-4">
       <div>
-        <p class="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-1">Mevcut Plan</p>
-        <h2 class="text-3xl font-black text-gray-900">{{ auth.user?.plan }}</h2>
+        <p class="text-sm font-semibold text-[#5b73e8] uppercase tracking-wider mb-1">Mevcut Plan</p>
+        <h2 class="text-3xl font-bold text-gray-900">{{ auth.user?.plan }}</h2>
         <p v-if="auth.user?.planExpiresAt && auth.user?.plan !== 'FREE'" class="text-sm text-gray-500 mt-1">
           Yenileme: {{ new Date(auth.user.planExpiresAt).toLocaleDateString('tr-TR') }}
         </p>
@@ -36,11 +36,11 @@
     <!-- Plans -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div v-for="plan in plans" :key="plan.id"
-           :class="['card p-6 flex flex-col relative', plan.id === auth.user?.plan ? 'ring-2 ring-orange-500' : '']">
-        <div v-if="plan.id === auth.user?.plan" class="absolute top-4 right-4 badge-orange text-xs">Aktif</div>
-        <h3 class="text-xl font-black text-gray-900 mb-1">{{ plan.name }}</h3>
+           :class="['card p-6 flex flex-col relative', plan.id === auth.user?.plan ? 'ring-2 ring-[#768dfb]' : '']">
+        <div v-if="plan.id === auth.user?.plan" class="absolute top-4 right-4 badge-blue text-xs">Aktif</div>
+        <h3 class="text-xl font-bold text-gray-900 mb-1">{{ plan.name }}</h3>
         <div class="mb-4">
-          <span class="text-3xl font-black text-gray-900">{{ plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}` }}</span>
+          <span class="text-3xl font-bold text-gray-900">{{ plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}` }}</span>
           <span v-if="plan.price > 0" class="text-gray-400 text-sm">/ay</span>
         </div>
         <ul class="space-y-2 mb-6 flex-1">
@@ -68,7 +68,7 @@
     <!-- iyzico Payment Modal -->
     <AppModal v-model="showPaymentModal" title="Güvenli Ödeme" size="lg">
       <div v-if="checkoutLoading" class="flex justify-center py-12">
-        <Loader2 :size="28" class="animate-spin text-orange-400" />
+        <Loader2 :size="28" class="animate-spin text-[#768dfb]" />
       </div>
       <div v-else-if="checkoutFormContent" ref="iyzicoContainer" class="iyzico-form-wrap" />
       <div v-else class="text-center py-8 text-gray-500">Ödeme formu yüklenemedi.</div>

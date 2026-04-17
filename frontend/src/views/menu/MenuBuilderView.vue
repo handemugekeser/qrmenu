@@ -25,7 +25,7 @@
       <div class="p-4 border-b border-gray-100">
         <div class="flex items-center justify-between mb-1">
           <h2 class="font-bold text-gray-900 text-sm">Kategoriler</h2>
-          <button @click="openAddCategory" class="p-1.5 rounded-lg bg-orange-50 text-orange-500 hover:bg-orange-100">
+          <button @click="openAddCategory" class="p-1.5 rounded-lg bg-[#768dfb]/10 text-[#5b73e8] hover:bg-[#768dfb]/20">
             <Plus :size="16" />
           </button>
         </div>
@@ -41,14 +41,14 @@
               v-for="cat in categories"
               :key="cat.id"
               :class="['flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all group',
-                       selectedCat?.id === cat.id ? 'bg-orange-50 text-orange-600' : 'hover:bg-gray-50 text-gray-700']"
+                       selectedCat?.id === cat.id ? 'bg-[#768dfb]/10 text-[#5b73e8]' : 'hover:bg-gray-50 text-gray-700']"
               @click="selectedCat = cat"
             >
               <GripVertical :size="14" class="drag-handle cursor-grab text-gray-300 shrink-0" />
               <span class="flex-1 text-sm font-medium truncate">{{ cat.name }}</span>
               <span class="text-xs text-gray-400 shrink-0">{{ cat.products?.length || 0 }}</span>
               <div class="flex gap-1 opacity-0 group-hover:opacity-100 shrink-0">
-                <button @click.stop="openEditCategory(cat)" class="p-1 rounded hover:bg-orange-100 text-gray-400 hover:text-orange-500">
+                <button @click.stop="openEditCategory(cat)" class="p-1 rounded hover:bg-[#768dfb]/10 text-gray-400 hover:text-[#5b73e8]">
                   <Pencil :size="12" />
                 </button>
                 <button @click.stop="doDeleteCategory(cat)" class="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
@@ -116,7 +116,7 @@
                     </div>
                     <p class="text-sm text-gray-400 mt-0.5 line-clamp-1">{{ prod.description }}</p>
                     <div class="flex items-center gap-3 mt-2">
-                      <span class="font-bold text-orange-500">{{ fmt(prod.basePrice) }}</span>
+                      <span class="font-bold text-[#5b73e8]">{{ fmt(prod.basePrice) }}</span>
                       <span v-if="prod.variants?.length" class="text-xs text-gray-400">{{ prod.variants.length }} varyant</span>
                       <span v-if="prod.extras?.length" class="text-xs text-gray-400">{{ prod.extras.length }} ekstra</span>
                     </div>

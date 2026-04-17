@@ -3,11 +3,11 @@
     <!-- Header -->
     <div class="flex items-start justify-between gap-4">
       <div class="flex items-center gap-4">
-        <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow" style="background: #768dfb">
           {{ business.name[0] }}
         </div>
         <div>
-          <h1 class="text-2xl font-black text-gray-900">{{ business.name }}</h1>
+          <h1 class="text-2xl font-bold text-gray-900">{{ business.name }}</h1>
           <p class="text-gray-400 text-sm">qrmenu.app/menu/{{ business.slug }}</p>
         </div>
       </div>
@@ -19,12 +19,12 @@
     <!-- Menus -->
     <div>
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Menüler</h2>
+        <h2 class="text-lg font-semibold text-gray-900">Menüler</h2>
         <button @click="openCreateMenu" class="btn-primary btn-sm"><Plus :size="16" /> Yeni Menü</button>
       </div>
 
       <div v-if="menuStore.loading" class="flex justify-center py-8">
-        <Loader2 :size="24" class="animate-spin text-orange-400" />
+        <Loader2 :size="24" class="animate-spin text-[#768dfb]" />
       </div>
       <div v-else-if="menuStore.menus.length === 0" class="card p-10 text-center">
         <UtensilsCrossed :size="36" class="text-gray-300 mx-auto mb-3" />
@@ -51,16 +51,16 @@
             <span>{{ menu._count?.analytics || 0 }} görüntülenme</span>
           </div>
           <div class="flex items-center gap-2">
-            <router-link :to="`/businesses/${business.id}/menus/${menu.id}`" class="btn-primary btn-sm flex-1 justify-center">
+            <router-link :to="`/app/businesses/${business.id}/menus/${menu.id}`" class="btn-primary btn-sm flex-1 justify-center">
               <List :size="14" /> Düzenle
             </router-link>
             <button @click="openPublicMenu(menu)" class="btn-secondary btn-sm" title="Görüntüle">
               <ExternalLink :size="14" />
             </button>
-            <router-link :to="`/businesses/${business.id}/menus/${menu.id}/qrcodes`" class="btn-secondary btn-sm">
+            <router-link :to="`/app/businesses/${business.id}/menus/${menu.id}/qrcodes`" class="btn-secondary btn-sm">
               <QrCode :size="14" />
             </router-link>
-            <router-link :to="`/businesses/${business.id}/menus/${menu.id}/analytics`" class="btn-secondary btn-sm">
+            <router-link :to="`/app/businesses/${business.id}/menus/${menu.id}/analytics`" class="btn-secondary btn-sm">
               <BarChart3 :size="14" />
             </router-link>
             <button @click="deleteMenu(menu)" class="btn-ghost btn-sm text-red-400 hover:text-red-600 hover:bg-red-50">
@@ -108,6 +108,25 @@
               <option value="EN">English</option>
               <option value="AR">العربية</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Social Media Links -->
+        <div class="border-t border-gray-100 pt-4">
+          <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <Share2 :size="15" class="text-[#768dfb]" /> Sosyal Medya Hesapları
+          </p>
+          <div class="space-y-2.5">
+            <div v-for="s in socialPlatforms" :key="s.key" class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" :style="`background:${s.color}15; color:${s.color}`">
+                <component :is="s.icon" :size="16" />
+              </div>
+              <input
+                v-model="editForm.socialLinks[s.key]"
+                class="input flex-1 text-sm"
+                :placeholder="s.placeholder"
+              />
+            </div>
           </div>
         </div>
       </form>
@@ -168,12 +187,12 @@
   </div>
 
   <div v-else class="flex justify-center items-center h-64">
-    <Loader2 :size="32" class="animate-spin text-orange-400" />
+    <Loader2 :size="32" class="animate-spin text-[#768dfb]" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, h } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBusinessStore } from '@/stores/business'
 import { useMenuStore } from '@/stores/menu'
@@ -184,8 +203,28 @@ import AppToggle from '@/components/ui/AppToggle.vue'
 import UpgradeModal from '@/components/ui/UpgradeModal.vue'
 import {
   Pencil, ExternalLink, Plus, List, QrCode, BarChart3,
-  Trash2, Loader2, UtensilsCrossed
+  Trash2, Loader2, UtensilsCrossed, Share2,
+  Instagram, Facebook, Youtube
 } from 'lucide-vue-next'
+
+// Render-function icons (no runtime template compiler needed)
+const IconX = (props: { size?: number }) =>
+  h('svg', { viewBox: '0 0 24 24', width: props.size ?? 24, height: props.size ?? 24, fill: 'currentColor' }, [
+    h('path', { d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.258 5.63 5.906-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z' }),
+  ])
+
+const IconTikTok = (props: { size?: number }) =>
+  h('svg', { viewBox: '0 0 24 24', width: props.size ?? 24, height: props.size ?? 24, fill: 'currentColor' }, [
+    h('path', { d: 'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z' }),
+  ])
+
+const socialPlatforms = [
+  { key: 'instagram', label: 'Instagram', icon: Instagram,  color: '#E1306C', placeholder: 'https://instagram.com/hesabiniz' },
+  { key: 'facebook',  label: 'Facebook',  icon: Facebook,   color: '#1877F2', placeholder: 'https://facebook.com/sayfaniz' },
+  { key: 'twitter',   label: 'X',         icon: IconX,      color: '#000000', placeholder: 'https://x.com/hesabiniz' },
+  { key: 'tiktok',    label: 'TikTok',    icon: IconTikTok, color: '#010101', placeholder: 'https://tiktok.com/@hesabiniz' },
+  { key: 'youtube',   label: 'YouTube',   icon: Youtube,    color: '#FF0000', placeholder: 'https://youtube.com/@kanaliniz' },
+]
 
 const PLAN_LIMITS = {
   FREE: { maxMenus: 1 },
@@ -212,10 +251,23 @@ const newMenu = ref({ name: '', description: '', themeColor: '#FF6B35' })
 const showUpgrade = ref(false)
 const upgradeMessage = ref('')
 
+function initEditForm() {
+  editForm.value = {
+    ...business.value,
+    socialLinks: {
+      instagram: '', facebook: '', twitter: '',
+      tiktok: '', youtube: '',
+      ...(business.value.socialLinks || {}),
+    },
+  }
+}
+
+watch(showEdit, (val) => { if (val) initEditForm() })
+
 onMounted(async () => {
   const id = route.params.businessId as string
   business.value = await businessStore.fetchOne(id)
-  editForm.value = { ...business.value }
+  initEditForm()
   await menuStore.fetchAll(id)
 })
 

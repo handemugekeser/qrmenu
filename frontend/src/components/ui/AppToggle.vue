@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    :class="['toggle', modelValue ? 'bg-orange-500' : 'bg-gray-200']"
+    :class="['toggle', modelValue ? 'bg-[#768dfb]' : 'bg-gray-200']"
     @click="$emit('update:modelValue', !modelValue)"
     :aria-checked="modelValue"
   >

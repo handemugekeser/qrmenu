@@ -17,7 +17,14 @@
       "Bash(grep -r \"name: ''dashboard''\\\\|to=\"\"/\"\"\\\\|push\\(''/''\\)\\\\|path: ''/''\" /Users/handemugekeser/Sites/qrmenu/frontend/src --include=\"*.vue\" --include=\"*.ts\" -l)",
       "Bash(grep -n \"name: ''dashboard''\\\\|to=\"\"/\"\"\\\\|push\\(''/''\\)\\\\|push\\({ name\" /Users/handemugekeser/Sites/qrmenu/frontend/src/components/layout/DashboardLayout.vue /Users/handemugekeser/Sites/qrmenu/frontend/src/views/auth/RegisterView.vue /Users/handemugekeser/Sites/qrmenu/frontend/src/stores/auth.ts)",
       "Bash(npx vue-tsc:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i '' -e \"s/''Waldenburg'', ''Waldenburg Fallback'', ''Bricolage Grotesque'', sans-serif/''Poppins'', sans-serif/g\" -e \"s/''Waldenburg'', ''Waldenburg Fallback'', ''Bricolage Grotesque''/Poppins/g\" -e \"s/''DM Sans'', system-ui, sans-serif/''Poppins'', system-ui, sans-serif/g\" -e \"s/''DM Sans'', sans-serif/''Poppins'', sans-serif/g\" -e \"s/font-family: ''DM Sans''/font-family: ''Poppins''/g\" -e \"s/family=''DM Sans''/family=''Poppins''/g\" \"$f\")",
+      "Bash(echo \"✓ $f\")",
+      "Bash(done)",
+      "Bash(npx prisma:*)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

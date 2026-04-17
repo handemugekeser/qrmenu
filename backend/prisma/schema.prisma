@@ -68,6 +68,7 @@ model Business {
   coverUrl    String?
   currency    String   @default("TRY")
   defaultLang Language @default(TR)
+  socialLinks Json?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

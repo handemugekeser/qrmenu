@@ -1,10 +1,10 @@
 <template>
   <div class="p-6 lg:p-8 space-y-6">
     <div class="flex items-center justify-between">
-      <div><h1 class="text-2xl font-black text-gray-900">İşletmeler</h1></div>
+      <div><h1 class="text-2xl font-bold text-gray-900">İşletmeler</h1></div>
       <button @click="openCreate" class="btn-primary"><Plus :size="18" /> Yeni İşletme</button>
     </div>
-    <div v-if="businessStore.loading" class="flex justify-center py-16"><Loader2 :size="28" class="animate-spin text-orange-400" /></div>
+    <div v-if="businessStore.loading" class="flex justify-center py-16"><Loader2 :size="28" class="animate-spin text-[#768dfb]" /></div>
     <div v-else-if="!businessStore.businesses.length" class="card p-16 text-center">
       <Building2 :size="48" class="text-gray-200 mx-auto mb-4" />
       <p class="text-gray-500 mb-4">Henüz işletme yok</p>
@@ -12,10 +12,10 @@
     </div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div v-for="biz in businessStore.businesses" :key="biz.id" class="card p-5 hover:shadow-md transition-shadow group relative">
-        <router-link :to="`/businesses/${biz.id}`" class="flex items-start gap-4">
-          <div class="w-12 h-12 bg-linear-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0">{{ biz.name[0] }}</div>
+        <router-link :to="`/app/businesses/${biz.id}`" class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0" style="background: #768dfb">{{ biz.name[0] }}</div>
           <div class="flex-1 min-w-0">
-            <h3 class="font-bold text-gray-900 group-hover:text-orange-500 transition-colors truncate">{{ biz.name }}</h3>
+            <h3 class="font-semibold text-gray-900 group-hover:text-[#5b73e8] transition-colors truncate">{{ biz.name }}</h3>
             <p class="text-xs text-gray-400 truncate">/menu/{{ biz.slug }}</p>
             <div class="flex gap-2 mt-2">
               <span class="badge-blue">{{ biz._count?.menus || 0 }} Menü</span>

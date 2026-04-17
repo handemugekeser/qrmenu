@@ -1,6 +1,6 @@
 <template>
   <div class="p-6 lg:p-8 max-w-2xl space-y-6">
-    <div><h1 class="text-2xl font-black text-gray-900">Ayarlar</h1><p class="text-gray-500 mt-1">Hesap bilgilerinizi düzenleyin</p></div>
+    <div><h1 class="text-2xl font-bold text-gray-900">Ayarlar</h1><p class="text-gray-500 mt-1">Hesap bilgilerinizi düzenleyin</p></div>
     <div class="card p-6 space-y-4">
       <h2 class="font-bold text-gray-900">Profil Bilgileri</h2>
       <div><label class="label">Ad Soyad</label><input v-model="form.name" class="input" /></div>

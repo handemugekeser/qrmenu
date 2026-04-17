@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-4">
+  <div class="min-h-screen flex items-center justify-center p-4" style="background:linear-gradient(135deg,#f0f3ff 0%,#ffffff 50%,#f4f0ff 100%)">
     <div class="w-full max-w-md">
       <!-- Logo -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center gap-2.5 mb-2">
-          <div class="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-200">
-            <span class="text-white font-black text-lg">Q</span>
+          <div class="flex flex-col items-center justify-center gap-0.5" style="width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#8a9efc 0%,#6478f0 100%);box-shadow:0 4px 14px rgba(118,141,251,.38)">
+            <span style="font-family:'Waldenburg','Waldenburg Fallback','Bricolage Grotesque',sans-serif;font-weight:800;font-size:21px;line-height:1;color:#fff;letter-spacing:-0.02em">Q</span>
           </div>
-          <span class="font-black text-gray-900 text-2xl tracking-tight">QRmenu</span>
+          <span style="font-family:'Waldenburg','Waldenburg Fallback','Bricolage Grotesque',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.03em;color:#111120">QRmenu</span>
         </div>
         <p class="text-gray-500 text-sm mt-1">Dijital menülerinizi yönetin</p>
       </div>
@@ -37,13 +37,13 @@
 
         <div class="mt-6 text-center">
           <span class="text-sm text-gray-500">Hesabın yok mu? </span>
-          <router-link to="/register" class="text-sm font-semibold text-orange-500 hover:text-orange-600">
+          <router-link to="/register" class="text-sm font-semibold text-[#768dfb] hover:text-[#5b73e8]">
             Kayıt Ol
           </router-link>
         </div>
 
         <!-- Demo hint -->
-        <div class="mt-4 p-3 bg-orange-50 rounded-xl text-xs text-orange-700 text-center">
+        <div class="mt-4 p-3 rounded-xl text-xs text-center" style="background:rgba(118,141,251,.08);color:#5b73e8">
           Demo: <strong>demo@qrmenu.app</strong> / <strong>password123</strong>
         </div>
       </div>

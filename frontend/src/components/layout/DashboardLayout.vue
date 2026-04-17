@@ -6,11 +6,12 @@
                sidebarOpen ? 'translate-x-0' : '-translate-x-full']"
     >
       <!-- Logo -->
-      <div class="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100 shrink-0">
-        <div class="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center">
-          <span class="text-white font-black text-sm">Q</span>
+      <div class="flex items-center gap-3 px-5 h-16 border-b border-gray-100 shrink-0">
+        <div class="flex flex-col items-center justify-center gap-0.5 shrink-0"
+             style="width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#8a9efc 0%,#6478f0 100%);box-shadow:0 3px 12px rgba(118,141,251,.38)">
+          <span style="font-family:'Waldenburg','Waldenburg Fallback','Bricolage Grotesque',sans-serif;font-weight:800;font-size:19px;line-height:1;color:#fff;letter-spacing:-0.02em">Q</span>
         </div>
-        <span class="font-black text-gray-900 text-lg tracking-tight">QRmenu</span>
+        <span style="font-family:'Waldenburg','Waldenburg Fallback','Bricolage Grotesque',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.03em;color:#111120">QRmenu</span>
         <span class="ml-auto">
           <span :class="planBadgeClass">{{ auth.user?.plan }}</span>
         </span>
@@ -81,7 +82,7 @@
       <!-- User -->
       <div class="p-3 border-t border-gray-100">
         <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer" @click="auth.logout(); $router.push('/login')">
-          <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style="background:rgba(118,141,251,.12);color:#5b73e8">
             {{ auth.user?.name?.[0]?.toUpperCase() }}
           </div>
           <div class="flex-1 min-w-0">

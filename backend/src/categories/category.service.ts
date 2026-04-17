@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsArray } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -34,7 +34,9 @@ export class UpdateCategoryDto {
 }
 
 export class ReorderDto {
-  ids: string[]; // ordered array of category IDs
+  @IsArray()
+  @IsString({ each: true })
+  ids: string[];
 }
 
 @Injectable()

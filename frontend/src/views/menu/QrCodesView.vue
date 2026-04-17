@@ -2,7 +2,7 @@
   <div class="p-6 lg:p-8 space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-black text-gray-900">QR Kodlar</h1>
+        <h1 class="text-2xl font-bold text-gray-900">QR Kodlar</h1>
         <p class="text-gray-500 mt-1">Menünüz için QR kod oluşturun</p>
       </div>
       <button @click="showGenerate = true" class="btn-primary">
@@ -11,7 +11,7 @@
     </div>
 
     <div v-if="loading" class="flex justify-center py-12">
-      <Loader2 :size="28" class="animate-spin text-orange-400" />
+      <Loader2 :size="28" class="animate-spin text-[#768dfb]" />
     </div>
     <div v-else-if="qrCodes.length === 0" class="card p-12 text-center">
       <QrCode :size="48" class="text-gray-200 mx-auto mb-4" />
@@ -60,7 +60,7 @@
         <div>
           <label class="label flex items-center gap-2">
             Masa Numarası (opsiyonel)
-            <span v-if="!isPro" class="inline-flex items-center gap-1 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
+            <span v-if="!isPro" class="inline-flex items-center gap-1 text-xs bg-[#768dfb]/10 text-[#5b73e8] px-2 py-0.5 rounded-full font-medium">
               <Zap :size="10" /> Pro
             </span>
           </label>

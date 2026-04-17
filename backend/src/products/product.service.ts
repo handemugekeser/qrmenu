@@ -41,6 +41,8 @@ export class CreateExtraDto {
 }
 
 export class ReorderProductsDto {
+  @IsArray()
+  @IsString({ each: true })
   ids: string[];
 }
 

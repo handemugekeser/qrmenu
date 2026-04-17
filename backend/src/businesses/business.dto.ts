@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsString, IsOptional, MinLength, MaxLength, Matches, IsObject } from 'class-validator';
 import { Language } from '@prisma/client';
 
 export class CreateBusinessDto {
@@ -63,4 +63,14 @@ export class UpdateBusinessDto {
 
   @IsOptional()
   defaultLang?: Language;
+
+  @IsOptional()
+  @IsObject()
+  socialLinks?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+  };
 }

@@ -3,10 +3,10 @@
     <!-- Welcome -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-black text-gray-900">Merhaba, {{ firstName }} 👋</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Merhaba, {{ firstName }} 👋</h1>
         <p class="text-gray-500 mt-1">İşletmelerinize genel bakış</p>
       </div>
-      <button @click="showCreateBusiness = true" class="btn-primary">
+      <button @click="openCreate" class="btn-primary">
         <Plus :size="18" /> Yeni İşletme
       </button>
     </div>
@@ -20,21 +20,21 @@
             <component :is="stat.icon" :size="18" :class="stat.color" />
           </div>
         </div>
-        <p class="text-3xl font-black text-gray-900">{{ stat.value }}</p>
+        <p class="text-3xl font-bold text-gray-900">{{ stat.value }}</p>
         <p class="text-xs text-gray-400 mt-1">{{ stat.sub }}</p>
       </div>
     </div>
 
     <!-- Businesses list -->
     <div>
-      <h2 class="text-lg font-bold text-gray-900 mb-4">İşletmeler</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">İşletmeler</h2>
       <div v-if="businessStore.loading" class="flex justify-center py-12">
-        <Loader2 :size="28" class="animate-spin text-orange-400" />
+        <Loader2 :size="28" class="animate-spin text-[#768dfb]" />
       </div>
       <div v-else-if="businessStore.businesses.length === 0" class="card p-12 text-center">
         <Building2 :size="40" class="text-gray-300 mx-auto mb-3" />
         <p class="text-gray-500 mb-4">Henüz işletme oluşturmadınız</p>
-        <button @click="showCreateBusiness = true" class="btn-primary">
+        <button @click="openCreate" class="btn-primary">
           <Plus :size="18" /> İlk İşletmenizi Oluşturun
         </button>
       </div>
@@ -42,15 +42,15 @@
         <router-link
           v-for="biz in businessStore.businesses"
           :key="biz.id"
-          :to="`/businesses/${biz.id}`"
+          :to="`/app/businesses/${biz.id}`"
           class="card p-5 hover:shadow-md transition-shadow group"
         >
           <div class="flex items-start gap-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-sm shrink-0">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-sm shrink-0" style="background: #768dfb">
               {{ biz.name[0] }}
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="font-bold text-gray-900 group-hover:text-orange-500 transition-colors truncate">{{ biz.name }}</h3>
+              <h3 class="font-semibold text-gray-900 group-hover:text-[#5b73e8] transition-colors truncate">{{ biz.name }}</h3>
               <p class="text-xs text-gray-400 mt-0.5">qrmenu.app/menu/{{ biz.slug }}</p>
               <div class="flex items-center gap-3 mt-3">
                 <span class="badge-blue">{{ biz._count?.menus || 0 }} Menü</span>
@@ -63,6 +63,9 @@
         </router-link>
       </div>
     </div>
+
+    <!-- Upgrade Modal -->
+    <UpgradeModal v-model="showUpgrade" :message="upgradeMessage" />
 
     <!-- Create business modal -->
     <AppModal v-model="showCreateBusiness" title="Yeni İşletme">
@@ -107,14 +110,23 @@ import { useBusinessStore } from '@/stores/business'
 import { businessApi } from '@/api'
 import { useToast } from '@/composables/useToast'
 import AppModal from '@/components/ui/AppModal.vue'
+import UpgradeModal from '@/components/ui/UpgradeModal.vue'
 import { Plus, Building2, UtensilsCrossed, QrCode, BarChart3, Loader2 } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const businessStore = useBusinessStore()
 const toast = useToast()
 
+const PLAN_LIMITS = {
+  FREE: { maxBusinesses: 1 },
+  PRO: { maxBusinesses: 3 },
+  PREMIUM: { maxBusinesses: -1 },
+}
+
 const showCreateBusiness = ref(false)
 const creating = ref(false)
+const showUpgrade = ref(false)
+const upgradeMessage = ref('')
 const slugStatus = ref<'available' | 'taken' | null>(null)
 const newBiz = ref({ name: '', slug: '', phone: '' })
 
@@ -126,8 +138,8 @@ const stats = computed(() => [
     value: businessStore.businesses.length,
     sub: 'toplam',
     icon: Building2,
-    bg: 'bg-orange-50',
-    color: 'text-orange-500',
+    bg: 'bg-[#768dfb]/10',
+    color: 'text-[#5b73e8]',
   },
   {
     label: 'Menüler',
@@ -154,6 +166,19 @@ const stats = computed(() => [
     color: 'text-emerald-500',
   },
 ])
+
+async function openCreate() {
+  const plan = (auth.user?.plan || 'FREE') as 'FREE' | 'PRO' | 'PREMIUM'
+  const limit = PLAN_LIMITS[plan]?.maxBusinesses ?? 1
+  const count = businessStore.businesses.length
+
+  if (limit !== -1 && count >= limit) {
+    upgradeMessage.value = `${plan === 'FREE' ? 'Free planda' : 'Pro planda'} en fazla ${limit} işletme ekleyebilirsiniz. Daha fazla işletme eklemek için aboneliğinizi yükseltin.`
+    showUpgrade.value = true
+    return
+  }
+  showCreateBusiness.value = true
+}
 
 function autoSlug() {
   newBiz.value.slug = newBiz.value.name
@@ -186,7 +211,13 @@ async function createBusiness() {
     newBiz.value = { name: '', slug: '', phone: '' }
     toast.success('İşletme oluşturuldu!')
   } catch (e: any) {
-    toast.error(e.response?.data?.message || 'Hata oluştu')
+    if (e.response?.status === 403) {
+      showCreateBusiness.value = false
+      upgradeMessage.value = e.response?.data?.message || 'Plan limitine ulaştınız.'
+      showUpgrade.value = true
+    } else {
+      toast.error(e.response?.data?.message || 'Hata oluştu')
+    }
   } finally {
     creating.value = false
   }

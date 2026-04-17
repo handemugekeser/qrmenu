@@ -65,6 +65,7 @@ export class PublicMenuService {
         coverUrl: business.coverUrl,
         currency: business.currency,
         phone: business.phone,
+        socialLinks: business.socialLinks,
       },
       menu: translatedMenu,
     };
