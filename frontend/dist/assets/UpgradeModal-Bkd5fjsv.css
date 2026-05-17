@@ -1,0 +1,1 @@
+.upgrade-modal-enter-active{transition:opacity .2s ease}.upgrade-modal-leave-active{transition:opacity .15s ease}.upgrade-modal-enter-from,.upgrade-modal-leave-to{opacity:0}.upgrade-modal-enter-active .upgrade-box{transition:transform .2s ease,opacity .2s ease}.upgrade-modal-enter-from .upgrade-box{transform:scale(.95) translateY(-8px);opacity:0}
