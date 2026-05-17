@@ -3,8 +3,9 @@
     <!-- Header -->
     <div class="flex items-start justify-between gap-4">
       <div class="flex items-center gap-4">
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow" style="background: #768dfb">
-          {{ business.name[0] }}
+        <div class="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center text-white font-bold text-2xl shadow shrink-0" style="background: #768dfb">
+          <img v-if="business.logoUrl" :src="business.logoUrl" class="w-full h-full object-cover" alt="" />
+          <span v-else>{{ business.name[0] }}</span>
         </div>
         <div>
           <h1 class="text-2xl font-bold text-gray-900">{{ business.name }}</h1>
@@ -74,6 +75,33 @@
     <!-- Edit Business Modal -->
     <AppModal v-model="showEdit" title="İşletmeyi Düzenle" size="lg">
       <form class="space-y-4">
+
+        <!-- Logo Upload -->
+        <div class="border-b border-gray-100 pb-4">
+          <label class="label mb-2">İşletme Logosu</label>
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center shrink-0 border border-gray-200 bg-gray-50">
+              <img v-if="editForm.logoUrl" :src="editForm.logoUrl" class="w-full h-full object-cover" alt="" />
+              <span v-else class="text-2xl font-bold text-white w-full h-full flex items-center justify-center" style="background:#768dfb">
+                {{ editForm.name?.[0] || '?' }}
+              </span>
+            </div>
+            <div class="flex-1">
+              <label class="cursor-pointer">
+                <div class="btn-secondary btn-sm inline-flex items-center gap-2">
+                  <Loader2 v-if="uploadingLogo" :size="14" class="animate-spin" />
+                  <ImageIcon v-else :size="14" />
+                  {{ uploadingLogo ? 'Yükleniyor...' : 'Logo Seç' }}
+                </div>
+                <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="handleLogoUpload" :disabled="uploadingLogo" />
+              </label>
+              <p class="text-[11px] text-gray-400 mt-1.5 leading-relaxed">
+                PNG, JPG veya WebP · Maks. 2 MB · En az 200×200 px önerilir
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="label">İşletme Adı</label>
@@ -204,8 +232,9 @@ import UpgradeModal from '@/components/ui/UpgradeModal.vue'
 import {
   Pencil, ExternalLink, Plus, List, QrCode, BarChart3,
   Trash2, Loader2, UtensilsCrossed, Share2,
-  Instagram, Facebook, Youtube
+  Instagram, Facebook, Youtube, Image as ImageIcon
 } from 'lucide-vue-next'
+import { uploadApi } from '@/api'
 
 // Render-function icons (no runtime template compiler needed)
 const IconX = (props: { size?: number }) =>
@@ -250,6 +279,7 @@ const editForm = ref<any>({})
 const newMenu = ref({ name: '', description: '', themeColor: '#FF6B35' })
 const showUpgrade = ref(false)
 const upgradeMessage = ref('')
+const uploadingLogo = ref(false)
 
 function initEditForm() {
   editForm.value = {
@@ -270,6 +300,25 @@ onMounted(async () => {
   initEditForm()
   await menuStore.fetchAll(id)
 })
+
+async function handleLogoUpload(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    toast.error('Sadece PNG, JPG veya WebP formatı desteklenir')
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    toast.error('Dosya boyutu 2 MB\'ı geçemez')
+    return
+  }
+  uploadingLogo.value = true
+  try {
+    const { data } = await uploadApi.image(file)
+    editForm.value.logoUrl = data.url
+  } catch { toast.error('Logo yüklenemedi') }
+  finally { uploadingLogo.value = false }
+}
 
 function openPublicMenu(menu: any) {
   window.open(`/menu/${business.value.slug}?menuId=${menu.id}`, '_blank')

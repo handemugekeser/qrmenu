@@ -54,11 +54,19 @@
               <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><rect x="1" y="4" width="14" height="2" rx="1"/><rect x="4" y="6" width="1.5" height="6" rx="0.75"/><rect x="10.5" y="6" width="1.5" height="6" rx="0.75"/><rect x="2" y="11" width="12" height="1.5" rx="0.75"/></svg>
               Masa {{ tableNumber }}
             </div>
-            <div class="lang-switcher">
-              <button v-for="l in langs" :key="l.code" @click="switchLang(l.code)"
-                :class="['lang-btn', { active: currentLang === l.code }]">
-                {{ l.flag }}
+            <div class="lang-dropdown" v-click-outside="() => langOpen = false">
+              <button class="lang-selected" @click="langOpen = !langOpen">
+                {{ currentLang }}
+                <svg :class="['lang-chevron', { open: langOpen }]" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 4l4 4 4-4"/></svg>
               </button>
+              <div v-if="langOpen" class="lang-options">
+                <button v-for="l in langs" :key="l.code"
+                  :class="['lang-option', { active: currentLang === l.code }]"
+                  @click="switchLang(l.code); langOpen = false">
+                  {{ l.flag }}
+                  <svg v-if="currentLang === l.code" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -326,6 +334,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+const vClickOutside = {
+  mounted(el: HTMLElement, binding: any) {
+    el._clickOutside = (e: MouseEvent) => { if (!el.contains(e.target as Node)) binding.value(e) }
+    document.addEventListener('click', el._clickOutside)
+  },
+  unmounted(el: HTMLElement) { document.removeEventListener('click', el._clickOutside) },
+}
 import { useRoute } from 'vue-router'
 import { publicApi } from '@/api'
 
@@ -355,6 +371,7 @@ const activeCat   = ref('')
 const navRef      = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 const searchFocused = ref(false)
+const langOpen = ref(false)
 
 const langs = [
   { code: 'TR', flag: 'TR' },
@@ -585,7 +602,6 @@ img { display: block; }
 /* ── Top header ────────────────────────────────────────────────── */
 .top-header {
   position: relative;
-  overflow: hidden;
   padding: 14px 16px 14px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -598,6 +614,7 @@ img { display: block; }
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
 }
 .cover-blur-img {
   width: 100%;
@@ -680,20 +697,35 @@ img { display: block; }
   white-space: nowrap;
 }
 
-.lang-switcher { display: flex; gap: 4px; }
-.lang-btn {
-  height: 30px; min-width: 38px; padding: 0 10px;
-  border-radius: 20px; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.04em;
-  background: var(--surface-2); border: 1px solid var(--border);
-  color: var(--text-muted); transition: all 0.18s ease;
-}
-.lang-btn.active {
-  background: var(--accent); color: #fff;
-  border-color: transparent;
+.lang-dropdown { position: relative; }
+.lang-selected {
+  display: flex; align-items: center; gap: 5px;
+  height: 30px; padding: 0 10px;
+  border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  background: var(--accent); color: #fff; border: none; cursor: pointer;
   box-shadow: 0 3px 10px var(--accent-glow);
+  transition: opacity 0.15s;
 }
-.lang-btn:hover:not(.active) { color: var(--text); border-color: var(--border-strong); }
+.lang-selected:hover { opacity: 0.9; }
+.lang-chevron { transition: transform 0.2s ease; flex-shrink: 0; }
+.lang-chevron.open { transform: rotate(180deg); }
+.lang-options {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden; min-width: 72px; z-index: 200;
+}
+.lang-option {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; width: 100%; padding: 9px 14px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--text-muted); background: transparent; border: none; cursor: pointer;
+  transition: background 0.15s;
+}
+.lang-option:hover { background: var(--surface-2); }
+.lang-option.active { color: var(--accent); }
 
 /* ── Search bar ────────────────────────────────────────────────── */
 .search-wrap {

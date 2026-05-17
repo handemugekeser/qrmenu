@@ -7,8 +7,8 @@ import { PLAN_LIMITS } from '../common/plan-limits.constants';
 const Iyzipay = require('iyzipay');
 
 const PLAN_PRICES: Record<string, string> = {
-  PRO: '299.0',
-  PREMIUM: '599.0',
+  PRO: '10.0',
+  PREMIUM: '25.0',
 };
 
 @Injectable()
@@ -57,7 +57,7 @@ export class SubscriptionService {
       conversationId,
       price,
       paidPrice: price,
-      currency: 'TRY',
+      currency: 'USD',
       basketId: `basket_${Date.now()}`,
       paymentGroup: 'PRODUCT',
       callbackUrl,
@@ -171,23 +171,23 @@ export class SubscriptionService {
         id: SubscriptionPlan.FREE,
         name: 'Free',
         price: 0,
-        currency: 'TRY',
+        currency: 'USD',
         limits: PLAN_LIMITS[SubscriptionPlan.FREE],
         features: ['1 İşletme', '1 Menü', '20 Ürün', 'QR Kod'],
       },
       {
         id: SubscriptionPlan.PRO,
         name: 'Pro',
-        price: 299,
-        currency: 'TRY',
+        price: 10,
+        currency: 'USD',
         limits: PLAN_LIMITS[SubscriptionPlan.PRO],
         features: ['3 İşletme', '5 Menü', '100 Ürün', 'Analitik', 'Masa QR', 'Özel Tema'],
       },
       {
         id: SubscriptionPlan.PREMIUM,
         name: 'Premium',
-        price: 599,
-        currency: 'TRY',
+        price: 25,
+        currency: 'USD',
         limits: PLAN_LIMITS[SubscriptionPlan.PREMIUM],
         features: ['Sınırsız İşletme', 'Sınırsız Menü', 'Sınırsız Ürün', 'Çoklu Dil', 'Öncelikli Destek'],
       },

@@ -40,7 +40,7 @@
         <div v-if="plan.id === auth.user?.plan" class="absolute top-4 right-4 badge-blue text-xs">Aktif</div>
         <h3 class="text-xl font-bold text-gray-900 mb-1">{{ plan.name }}</h3>
         <div class="mb-4">
-          <span class="text-3xl font-bold text-gray-900">{{ plan.price === 0 ? 'Ücretsiz' : `₺${plan.price}` }}</span>
+          <span class="text-3xl font-bold text-gray-900">{{ plan.price === 0 ? 'Ücretsiz' : `$${plan.price}` }}</span>
           <span v-if="plan.price > 0" class="text-gray-400 text-sm">/ay</span>
         </div>
         <ul class="space-y-2 mb-6 flex-1">
@@ -139,6 +139,13 @@ async function startCheckout(plan: any) {
   checkoutFormContent.value = ''
   try {
     const { data } = await subscriptionApi.createCheckout(plan.id)
+    // Demo user: backend returns upgraded user directly (no checkoutFormContent)
+    if (data.plan) {
+      await auth.fetchMe()
+      showPaymentModal.value = false
+      paymentResult.value = 'success'
+      return
+    }
     checkoutFormContent.value = data.checkoutFormContent
   } catch {
     toast.error('Ödeme formu yüklenemedi. Lütfen tekrar deneyin.')

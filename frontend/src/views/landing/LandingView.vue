@@ -28,6 +28,17 @@ const faqs = ref([
   { q: 'Her cihazda çalışır mı?',          a: 'Dijital menünüz her modern telefon, tablet ve masaüstü tarayıcıda mükemmel görünür.', open: false },
 ])
 const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
+
+const contactForm = ref({ name: '', email: '', message: '' })
+const contactSent = ref(false)
+const submitContact = () => {
+  if (!contactForm.value.name || !contactForm.value.email || !contactForm.value.message) return
+  contactSent.value = true
+  setTimeout(() => {
+    contactSent.value = false
+    contactForm.value = { name: '', email: '', message: '' }
+  }, 3000)
+}
 </script>
 
 <template>
@@ -38,7 +49,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
       <div class="nav-wrap">
         <a href="#" class="brand">
           <span class="brand-icon"><span class="bi-q">Q</span></span>
-          <span class="brand-name">QRmenu</span>
+          <span class="brand-name">Menusflow</span>
         </a>
 
         <nav class="nav-links">
@@ -46,6 +57,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
           <a href="#how">Nasıl Çalışır</a>
           <a href="#pricing">Fiyatlar</a>
           <a href="#faq">SSS</a>
+          <a href="#contact">İletişim</a>
         </nav>
 
         <div class="nav-ctas">
@@ -434,7 +446,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
         <div class="price-grid">
           <div class="price-card reveal">
             <div class="pc-name">Ücretsiz</div>
-            <div class="pc-price">₺0<span>/ay</span></div>
+            <div class="pc-price">$0<span>/ay</span></div>
             <p class="pc-desc">Başlamak için mükemmel. Kredi kartı gerekmez.</p>
             <ul class="pc-list">
               <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 menü</li>
@@ -450,17 +462,32 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
           <div class="price-card featured reveal">
             <div class="pc-badge">En Popüler</div>
             <div class="pc-name">Pro</div>
-            <div class="pc-price">₺399<span>/ay</span></div>
+            <div class="pc-price">$10<span>/ay</span></div>
             <p class="pc-desc">Büyüyen işletmeler için daha fazla güç.</p>
             <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sınırsız menü</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sınırsız ürün</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>3 işletme, 5 menü</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>100 ürüne kadar</li>
               <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>QR kod oluşturma</li>
               <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Mobil uyumlu menü</li>
               <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Özel marka</li>
               <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Analitik &amp; tarama istatistikleri</li>
             </ul>
             <button class="pc-btn-fill" @click="goRegister">Ücretsiz Deneyin</button>
+          </div>
+
+          <div class="price-card reveal">
+            <div class="pc-name">Premium</div>
+            <div class="pc-price">$25<span>/ay</span></div>
+            <p class="pc-desc">Tüm gücü isteyen işletmeler için.</p>
+            <ul class="pc-list">
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sınırsız işletme</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sınırsız menü &amp; ürün</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>QR kod oluşturma</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Çoklu dil desteği</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Öncelikli destek</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tüm analitik özellikleri</li>
+            </ul>
+            <button class="pc-btn-out" @click="goRegister">Hemen Başla</button>
           </div>
         </div>
       </div>
@@ -505,15 +532,67 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
       </div>
     </section>
 
+    <!-- ══ CONTACT ══════════════════════════════════════════════════ -->
+    <section class="section contact-section" id="contact">
+      <div class="sec-wrap">
+        <div class="contact-inner reveal">
+          <div class="contact-left">
+            <span class="sec-tag" style="color:#768dfb">İletişim</span>
+            <h2 class="contact-h2">Bir sorunuz mu var?</h2>
+            <p class="contact-sub">Ekibimiz size yardımcı olmaktan mutluluk duyar. Genellikle birkaç saat içinde yanıt veririz.</p>
+            <div class="contact-info">
+              <div class="ci-item">
+                <span class="ci-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </span>
+                <span>destek@menusflow.com</span>
+              </div>
+              <div class="ci-item">
+                <span class="ci-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <span>+90 (212) 000 00 00</span>
+              </div>
+            </div>
+          </div>
+
+          <form class="contact-form" @submit.prevent="submitContact">
+            <div class="cf-group">
+              <label class="cf-label">Ad Soyad</label>
+              <input v-model="contactForm.name" type="text" class="cf-input" placeholder="Adınız Soyadınız" />
+            </div>
+            <div class="cf-group">
+              <label class="cf-label">E-posta</label>
+              <input v-model="contactForm.email" type="email" class="cf-input" placeholder="ornek@email.com" />
+            </div>
+            <div class="cf-group">
+              <label class="cf-label">Mesajınız</label>
+              <textarea v-model="contactForm.message" class="cf-textarea" placeholder="Nasıl yardımcı olabiliriz?" rows="4"></textarea>
+            </div>
+            <button type="submit" class="cf-submit" :class="{ sent: contactSent }">
+              <template v-if="!contactSent">
+                Gönder
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              </template>
+              <template v-else>
+                Gönderildi
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </template>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <!-- ══ FOOTER ══════════════════════════════════════════════════ -->
     <footer class="land-footer">
       <div class="ft-wrap">
         <div class="ft-brand">
           <a href="#" class="brand" style="text-decoration:none">
             <span class="brand-icon"><span class="bi-q">Q</span></span>
-            <span class="brand-name" style="color:#fff">QRmenu</span>
+            <span class="brand-name" style="color:#fff">Menusflow</span>
           </a>
-          <p>Restoranınız için dijital menü oluşturmanın en kolay yolu.</p>
+          <p>Restoranınız için dijital menü oluşturmanın en kolay yolu — menusflow.com</p>
         </div>
         <div class="ft-links">
           <div class="ft-col">
@@ -536,7 +615,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
         </div>
       </div>
       <div class="ft-bottom">
-        <span>© 2025 QRmenu. Tüm hakları saklıdır.</span>
+        <span>© 2025 Menusflow. Tüm hakları saklıdır.</span>
         <span>Dünya genelindeki restoranlar için sevgiyle yapıldı ♥</span>
       </div>
     </footer>
@@ -978,7 +1057,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
 @keyframes fbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 @media(max-width:920px){
   .hero-wrap{grid-template-columns:1fr;gap:48px}
-  .hero-right{order:-1}
+  .hero-right{order:1}
   .phone-shell{width:220px;height:440px}
   .fb-top{right:-60px} .fb-bot{left:-60px}
 }
@@ -1161,7 +1240,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
    PRICING
 ════════════════════════════════════════════════════════ */
 .price-section { background:var(--bg); text-align:center; }
-.price-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:740px; margin:0 auto; }
+.price-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; max-width:1060px; margin:0 auto; }
 .price-card {
   background:var(--card);
   border:1.5px solid var(--border);
@@ -1207,7 +1286,8 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
   transition:opacity .15s, transform .1s, box-shadow .15s;
 }
 .pc-btn-fill:hover { opacity:.92; transform:translateY(-1px); box-shadow:0 8px 28px rgba(118,141,251,.3); }
-@media(max-width:640px){ .price-grid{grid-template-columns:1fr} }
+@media(max-width:860px){ .price-grid{grid-template-columns:1fr} }
+@media(min-width:861px) and (max-width:1060px){ .price-grid{grid-template-columns:1fr 1fr} }
 
 /* ═══════════════════════════════════════════════════════
    FAQ
@@ -1267,6 +1347,102 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
 @media(max-width:600px){ .cta-card{padding:52px 28px} }
 
 /* ═══════════════════════════════════════════════════════
+   CONTACT
+════════════════════════════════════════════════════════ */
+.contact-section { background: var(--dark); }
+.contact-inner {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 72px;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.contact-h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  color: #fff;
+  margin: 12px 0 16px;
+  line-height: 1.2;
+}
+.contact-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,.4);
+  line-height: 1.7;
+  margin: 0 0 32px;
+}
+.contact-info { display: flex; flex-direction: column; gap: 14px; }
+.ci-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: rgba(255,255,255,.5);
+}
+.ci-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: rgba(118,141,251,.12);
+  border: 1px solid rgba(118,141,251,.2);
+  display: flex; align-items: center; justify-content: center;
+  color: #768dfb;
+  flex-shrink: 0;
+}
+.contact-form {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.cf-group { display: flex; flex-direction: column; gap: 7px; }
+.cf-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.45); }
+.cf-input,
+.cf-textarea {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #fff;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  resize: none;
+}
+.cf-input::placeholder, .cf-textarea::placeholder { color: rgba(255,255,255,.2); }
+.cf-input:focus, .cf-textarea:focus {
+  border-color: rgba(118,141,251,.6);
+  box-shadow: 0 0 0 3px rgba(118,141,251,.12);
+}
+.cf-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #768dfb;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+}
+.cf-submit:hover { background: #5b73e8; }
+.cf-submit:active { transform: scale(.98); }
+.cf-submit.sent { background: #22c55e; cursor: default; }
+@media(max-width:768px) {
+  .contact-inner { grid-template-columns: 1fr; gap: 40px; }
+  .contact-left { text-align: center; }
+  .contact-info { align-items: center; }
+}
+
+/* ═══════════════════════════════════════════════════════
    FOOTER
 ════════════════════════════════════════════════════════ */
 .land-footer { background:#09090f; padding:64px 24px 32px; }
@@ -1275,6 +1451,7 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
   display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:48px;
 }
 .ft-brand p { font-size:14px; line-height:1.7; color:rgba(255,255,255,.35); margin-top:16px; max-width:220px; }
+.ft-links { display:flex; gap:48px; }
 .ft-col { display:flex; flex-direction:column; gap:12px; }
 .ft-col h4 { font-size:12px; font-weight:600; color:rgba(255,255,255,.5); letter-spacing:.08em; text-transform:uppercase; margin:0 0 4px; }
 .ft-col a { font-size:14px; color:rgba(255,255,255,.35); text-decoration:none; transition:color .15s; }
@@ -1285,6 +1462,6 @@ const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
   display:flex; justify-content:space-between;
   font-size:13px; color:rgba(255,255,255,.2);
 }
-@media(max-width:900px){ .ft-wrap{grid-template-columns:1fr 1fr;gap:32px} }
-@media(max-width:560px){ .ft-wrap{grid-template-columns:1fr} .ft-bottom{flex-direction:column;gap:8px} }
+@media(max-width:900px){ .ft-wrap{grid-template-columns:1fr 1fr;gap:32px} .ft-links{gap:32px} }
+@media(max-width:560px){ .ft-wrap{grid-template-columns:1fr} .ft-links{flex-direction:column;gap:24px} .ft-bottom{flex-direction:column;gap:8px} }
 </style>
