@@ -1,15 +1,51 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { type SupportedLocale, SUPPORTED_LOCALES, RTL_LOCALES, saveLocale } from '../../i18n'
 
 const router = useRouter()
+const { t, locale, tm } = useI18n()
+
 const scrolled = ref(false)
 const mobileOpen = ref(false)
+const langMenuOpen = ref(false)
+
+const isRtl = computed(() => RTL_LOCALES.includes(locale.value as SupportedLocale))
+
+const LANG_LABELS: Record<SupportedLocale, string> = {
+  tr: 'TR',
+  en: 'EN',
+  ar: 'AR',
+}
+
+const LANG_NAMES: Record<SupportedLocale, string> = {
+  tr: 'Türkçe',
+  en: 'English',
+  ar: 'العربية',
+}
+
+function setLocale(lang: SupportedLocale) {
+  locale.value = lang
+  saveLocale(lang)
+  langMenuOpen.value = false
+}
+
+// Sync html dir attribute with locale
+watch(isRtl, (rtl) => {
+  document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr')
+  document.documentElement.setAttribute('lang', locale.value)
+}, { immediate: true })
 
 const handleScroll = () => { scrolled.value = window.scrollY > 40 }
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
+  document.addEventListener('click', (e) => {
+    if (!(e.target as Element)?.closest('.lang-switcher')) {
+      langMenuOpen.value = false
+    }
+  })
   const io = new IntersectionObserver(
     (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in') }),
     { threshold: 0.1 }
@@ -21,13 +57,10 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 const goRegister = () => router.push('/register')
 const goLogin    = () => router.push('/login')
 
-const faqs = ref([
-  { q: 'Gerçekten ücretsiz mi?',          a: 'Evet. Ücretsiz plan sonsuza kadar ücretsizdir, kredi kartı gerekmez. 1 menü ve 20 ürüne kadar kullanabilirsiniz.', open: false },
-  { q: 'Müşteriler menüye nasıl ulaşır?', a: 'Herhangi bir akıllı telefon kamerası ile QR kodu tarayarak erişirler. Uygulama indirmeye gerek yoktur.', open: false },
-  { q: 'QR kodu yeniden bastırmadan fiyat güncelleyebilir miyim?', a: 'Evet. QR kod canlı menünüze bağlıdır. Değişiklikler anında yansır, yeniden baskı gerekmez.', open: false },
-  { q: 'Her cihazda çalışır mı?',          a: 'Dijital menünüz her modern telefon, tablet ve masaüstü tarayıcıda mükemmel görünür.', open: false },
-])
-const toggleFaq = (i: number) => { faqs.value[i].open = !faqs.value[i].open }
+const faqOpen = ref<boolean[]>([false, false, false, false])
+const toggleFaq = (i: number) => { faqOpen.value[i] = !faqOpen.value[i] }
+
+const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string }>)
 
 const contactForm = ref({ name: '', email: '', message: '' })
 const contactSent = ref(false)
@@ -42,7 +75,7 @@ const submitContact = () => {
 </script>
 
 <template>
-  <div class="land">
+  <div class="land" :dir="isRtl ? 'rtl' : 'ltr'">
 
     <!-- ══ NAV ══════════════════════════════════════════════════ -->
     <header :class="['nav', { scrolled }]">
@@ -53,16 +86,39 @@ const submitContact = () => {
         </a>
 
         <nav class="nav-links">
-          <a href="#features">Özellikler</a>
-          <a href="#how">Nasıl Çalışır</a>
-          <a href="#pricing">Fiyatlar</a>
-          <a href="#faq">SSS</a>
-          <a href="#contact">İletişim</a>
+          <a href="#features">{{ t('nav.features') }}</a>
+          <a href="#how">{{ t('nav.howItWorks') }}</a>
+          <a href="#pricing">{{ t('nav.pricing') }}</a>
+          <a href="#faq">{{ t('nav.faq') }}</a>
+          <a href="#contact">{{ t('nav.contact') }}</a>
         </nav>
 
         <div class="nav-ctas">
-          <button class="btn-ghost" @click="goLogin">Giriş Yap</button>
-          <button class="btn-pill" @click="goRegister">Ücretsiz Başla</button>
+          <!-- Language Switcher -->
+          <div class="lang-switcher">
+            <button class="lang-btn" @click.stop="langMenuOpen = !langMenuOpen" :aria-expanded="langMenuOpen">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              {{ LANG_LABELS[locale as SupportedLocale] }}
+              <svg :class="['lang-arrow', { open: langMenuOpen }]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <transition name="lang-drop">
+              <div v-if="langMenuOpen" class="lang-menu">
+                <button
+                  v-for="lang in SUPPORTED_LOCALES"
+                  :key="lang"
+                  :class="['lang-option', { active: locale === lang }]"
+                  @click="setLocale(lang)"
+                  :dir="lang === 'ar' ? 'rtl' : 'ltr'"
+                >
+                  <span class="lo-code">{{ LANG_LABELS[lang] }}</span>
+                  <span class="lo-name">{{ LANG_NAMES[lang] }}</span>
+                </button>
+              </div>
+            </transition>
+          </div>
+
+          <button class="btn-ghost" @click="goLogin">{{ t('nav.login') }}</button>
+          <button class="btn-pill" @click="goRegister">{{ t('nav.getStarted') }}</button>
         </div>
 
         <button class="hamburger" @click="mobileOpen = !mobileOpen" :class="{ open: mobileOpen }">
@@ -71,13 +127,24 @@ const submitContact = () => {
       </div>
 
       <div :class="['mobile-drawer', { open: mobileOpen }]">
-        <a href="#features"  @click="mobileOpen=false">Özellikler</a>
-        <a href="#how"       @click="mobileOpen=false">Nasıl Çalışır</a>
-        <a href="#pricing"   @click="mobileOpen=false">Fiyatlar</a>
-        <a href="#faq"       @click="mobileOpen=false">SSS</a>
+        <a href="#features"  @click="mobileOpen=false">{{ t('nav.features') }}</a>
+        <a href="#how"       @click="mobileOpen=false">{{ t('nav.howItWorks') }}</a>
+        <a href="#pricing"   @click="mobileOpen=false">{{ t('nav.pricing') }}</a>
+        <a href="#faq"       @click="mobileOpen=false">{{ t('nav.faq') }}</a>
+
+        <!-- Mobile lang switcher -->
+        <div class="mobile-lang">
+          <button
+            v-for="lang in SUPPORTED_LOCALES"
+            :key="lang"
+            :class="['ml-btn', { active: locale === lang }]"
+            @click="setLocale(lang)"
+          >{{ LANG_LABELS[lang] }}</button>
+        </div>
+
         <div class="drawer-foot">
-          <button class="btn-ghost w100" @click="goLogin">Giriş Yap</button>
-          <button class="btn-pill w100"  @click="goRegister">Ücretsiz Başla</button>
+          <button class="btn-ghost w100" @click="goLogin">{{ t('nav.login') }}</button>
+          <button class="btn-pill w100"  @click="goRegister">{{ t('nav.getStarted') }}</button>
         </div>
       </div>
     </header>
@@ -93,44 +160,42 @@ const submitContact = () => {
         <div class="hero-left">
           <div class="hero-badge">
             <span class="pulse-dot"></span>
-            500+ restoran kullanıyor · Ücretsiz başla
+            {{ t('hero.badge') }}
           </div>
 
           <h1 class="hero-h1">
-            Dijital Menünü&nbsp;&amp;<br/>
-            <em>QR Kodunu</em><br/>
-            Dakikalar İçinde Oluştur
+            {{ t('hero.h1Line1') }}<br/>
+            <em>{{ t('hero.h1Line2') }}</em><br/>
+            {{ t('hero.h1Line3') }}
           </h1>
 
-          <p class="hero-sub">
-            Tasarım bilgisi gerekmez. Menünü oluştur, özelleştir ve anında paylaş. Müşterilerin tara, sen kazan.
-          </p>
+          <p class="hero-sub">{{ t('hero.sub') }}</p>
 
           <div class="hero-btns">
             <button class="cta-main" @click="goRegister">
-              Ücretsiz Menü Oluştur
+              {{ t('hero.ctaMain') }}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
             <a href="#how" class="cta-ghost">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
-              Demo İzle
+              {{ t('hero.ctaDemo') }}
             </a>
           </div>
 
           <div class="hero-stats">
             <div class="hs-item">
               <strong>500+</strong>
-              <span>Restoran</span>
+              <span>{{ t('hero.stat1Label') }}</span>
             </div>
             <div class="hs-sep"></div>
             <div class="hs-item">
               <strong>50K+</strong>
-              <span>Aylık tarama</span>
+              <span>{{ t('hero.stat2Label') }}</span>
             </div>
             <div class="hs-sep"></div>
             <div class="hs-item">
-              <strong>2 dk</strong>
-              <span>Kurulum süresi</span>
+              <strong>{{ t('hero.stat3Value') }}</strong>
+              <span>{{ t('hero.stat3Label') }}</span>
             </div>
           </div>
         </div>
@@ -146,21 +211,21 @@ const submitContact = () => {
                   <div class="pm-avi">🍕</div>
                   <div>
                     <div class="pm-name">La Bella Cucina</div>
-                    <div class="pm-loc">İtalyan Mutfağı · Milano</div>
+                    <div class="pm-loc">Italian · Milano</div>
                   </div>
                 </div>
                 <div class="pm-tabs">
-                  <span class="pm-tab active">Başlangıçlar</span>
-                  <span class="pm-tab">Pizza</span>
-                  <span class="pm-tab">Makarna</span>
-                  <span class="pm-tab">Tatlı</span>
+                  <span class="pm-tab active">{{ t('hero.phoneCat1') }}</span>
+                  <span class="pm-tab">{{ t('hero.phoneCat2') }}</span>
+                  <span class="pm-tab">{{ t('hero.phoneCat3') }}</span>
+                  <span class="pm-tab">{{ t('hero.phoneCat4') }}</span>
                 </div>
                 <div class="pm-list">
                   <div class="pm-item">
                     <div class="pm-emoji">🥗</div>
                     <div class="pm-info">
                       <div class="pm-iname">Caesar Salad</div>
-                      <div class="pm-idesc">Marul, parmesan, kruton</div>
+                      <div class="pm-idesc">{{ t('hero.phoneItem1Desc') }}</div>
                       <div class="pm-iprice">₺180</div>
                     </div>
                     <button class="pm-add">+</button>
@@ -169,7 +234,7 @@ const submitContact = () => {
                     <div class="pm-emoji">🍞</div>
                     <div class="pm-info">
                       <div class="pm-iname">Bruschetta</div>
-                      <div class="pm-idesc">Domates, fesleğen, sarımsak</div>
+                      <div class="pm-idesc">{{ t('hero.phoneItem2Desc') }}</div>
                       <div class="pm-iprice">₺120</div>
                     </div>
                     <button class="pm-add">+</button>
@@ -177,8 +242,8 @@ const submitContact = () => {
                   <div class="pm-item">
                     <div class="pm-emoji">🦑</div>
                     <div class="pm-info">
-                      <div class="pm-iname">Kalamari</div>
-                      <div class="pm-idesc">Kalamar tava, limonlu sos</div>
+                      <div class="pm-iname">Calamari</div>
+                      <div class="pm-idesc">{{ t('hero.phoneItem3Desc') }}</div>
                       <div class="pm-iprice">₺220</div>
                     </div>
                     <button class="pm-add">+</button>
@@ -198,18 +263,18 @@ const submitContact = () => {
                     <rect x="48" y="62" width="6" height="6" fill="#768dfb"/>
                     <rect x="58" y="68" width="14" height="6" fill="#768dfb"/>
                   </svg>
-                  <span>QR ile tara</span>
+                  <span>{{ t('hero.phoneScan') }}</span>
                 </div>
               </div>
               <div class="p-bar"></div>
             </div>
           <div class="fb fb-top">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Menü canlıya alındı!
+              {{ t('hero.phoneLive') }}
             </div>
             <div class="fb fb-bot">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              84 tarama bu hafta
+              {{ t('hero.phoneScans') }}
             </div>
           </div>
         </div>
@@ -258,24 +323,24 @@ const submitContact = () => {
     <!-- ══ PROBLEM ════════════════════════════════════════════════ -->
     <section class="section pb-section">
       <div class="sec-wrap">
-        <div class="sec-tag reveal">Eski Yöntem</div>
-        <h2 class="sec-title reveal">Hâlâ basılı menü mü<br/>kullanıyorsunuz?</h2>
-        <p class="sec-sub reveal">Kâğıt menüler size düşündüğünüzden çok daha pahalıya mal oluyor.</p>
+        <div class="sec-tag reveal">{{ t('problem.tag') }}</div>
+        <h2 class="sec-title reveal" style="white-space:pre-line">{{ t('problem.title') }}</h2>
+        <p class="sec-sub reveal">{{ t('problem.sub') }}</p>
         <div class="pb-grid">
           <div class="pb-card reveal">
             <div class="pb-icon">💸</div>
-            <h3>Baskı masrafları</h3>
-            <p>Lamine menüler hızla yıpranır. Her fiyat güncellemesi yeni baskı demek — yılda yüzlerce dolar boşa gider.</p>
+            <h3>{{ t('problem.card1Title') }}</h3>
+            <p>{{ t('problem.card1Desc') }}</p>
           </div>
           <div class="pb-card reveal">
             <div class="pb-icon">⏳</div>
-            <h3>Güncelleme imkânsız</h3>
-            <p>Fiyat mı değiştirdiniz? Ürün mü tükendi? Basılı menüde düzeltme yapamaz, müşteriye açıklama yapmak zorunda kalırsınız.</p>
+            <h3>{{ t('problem.card2Title') }}</h3>
+            <p>{{ t('problem.card2Desc') }}</p>
           </div>
           <div class="pb-card reveal">
             <div class="pb-icon">😤</div>
-            <h3>Kötü müşteri deneyimi</h3>
-            <p>Yıpranmış, lekeli menüler ilk izlenimi mahveder. 2025'te müşteriler çok daha iyisini bekliyor.</p>
+            <h3>{{ t('problem.card3Title') }}</h3>
+            <p>{{ t('problem.card3Desc') }}</p>
           </div>
         </div>
       </div>
@@ -284,9 +349,9 @@ const submitContact = () => {
     <!-- ══ FEATURES (Bento) ═══════════════════════════════════════ -->
     <section class="section ft-section" id="features">
       <div class="sec-wrap">
-        <div class="sec-tag reveal">Özellikler</div>
-        <h2 class="sec-title reveal">Dijitale geçmek için<br/>ihtiyacınız olan her şey</h2>
-        <p class="sec-sub reveal">Teknik bilgi gerektirmeyen araçlarla profesyonel dijital menü oluşturun.</p>
+        <div class="sec-tag reveal">{{ t('features.tag') }}</div>
+        <h2 class="sec-title reveal" style="white-space:pre-line">{{ t('features.title') }}</h2>
+        <p class="sec-sub reveal">{{ t('features.sub') }}</p>
 
         <div class="bento">
           <!-- Big left -->
@@ -294,13 +359,13 @@ const submitContact = () => {
             <div class="bc-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             </div>
-            <h3>Görsel Menü Editörü</h3>
-            <p>Sürükle-bırak arayüzle kategoriler, ürünler ve fotoğraflar ekleyin. Hiç kod yazmanıza gerek yok.</p>
+            <h3>{{ t('features.feat1Title') }}</h3>
+            <p>{{ t('features.feat1Desc') }}</p>
             <div class="bc-visual editor-vis">
-              <div class="ev-row"><span class="ev-tag">Pizza</span><span class="ev-tag active">Başlangıç</span><span class="ev-tag">Tatlı</span></div>
+              <div class="ev-row"><span class="ev-tag">{{ t('features.editorCat1') }}</span><span class="ev-tag active">{{ t('features.editorCat2') }}</span><span class="ev-tag">{{ t('features.editorCat3') }}</span></div>
               <div class="ev-item"><span>🍕 Margherita</span><span class="ev-price">₺180</span></div>
               <div class="ev-item"><span>🥗 Caesar</span><span class="ev-price">₺120</span></div>
-              <div class="ev-item new"><span>+ Yeni ürün ekle</span></div>
+              <div class="ev-item new"><span>{{ t('features.editorAddNew') }}</span></div>
             </div>
           </div>
 
@@ -309,16 +374,16 @@ const submitContact = () => {
             <div class="bc-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M14 17h.01M17 14h.01M20 14h.01M17 17v3M20 17v3M17 20h3"/></svg>
             </div>
-            <h3>Anında QR Kod</h3>
-            <p>Tek tıkla markalı QR kod oluşturun. İndirin, yazdırın, masalara koyun.</p>
+            <h3>{{ t('features.feat2Title') }}</h3>
+            <p>{{ t('features.feat2Desc') }}</p>
           </div>
 
           <div class="bc reveal">
             <div class="bc-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
             </div>
-            <h3>Anlık Güncelleme</h3>
-            <p>Fiyat değiştirin, ürün kapatın — değişiklikler saniyeler içinde canlıya geçer.</p>
+            <h3>{{ t('features.feat3Title') }}</h3>
+            <p>{{ t('features.feat3Desc') }}</p>
           </div>
 
           <!-- Bottom wide -->
@@ -326,14 +391,14 @@ const submitContact = () => {
             <div class="bc-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
-            <h3>Varyant &amp; Ekstralar</h3>
-            <p>Boy seçenekleri, baharat seviyeleri, ek malzemeler — menünüzün ihtiyaç duyduğu her şey tek panelde.</p>
+            <h3>{{ t('features.feat4Title') }}</h3>
+            <p>{{ t('features.feat4Desc') }}</p>
             <div class="bc-visual var-vis">
-              <div class="vv-chip">Küçük</div>
-              <div class="vv-chip active">Orta</div>
-              <div class="vv-chip">Büyük</div>
-              <div class="vv-chip">+ Ekstra peynir</div>
-              <div class="vv-chip">+ Acı sos</div>
+              <div class="vv-chip">{{ t('features.varSmall') }}</div>
+              <div class="vv-chip active">{{ t('features.varMedium') }}</div>
+              <div class="vv-chip">{{ t('features.varLarge') }}</div>
+              <div class="vv-chip">{{ t('features.varExtraCheese') }}</div>
+              <div class="vv-chip">{{ t('features.varSpicy') }}</div>
             </div>
           </div>
 
@@ -341,16 +406,16 @@ const submitContact = () => {
             <div class="bc-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
             </div>
-            <h3>Mobil Uyumlu</h3>
-            <p>Her telefonda, tablette kusursuz görünüm. Uygulama indirme zorunluluğu yok.</p>
+            <h3>{{ t('features.feat5Title') }}</h3>
+            <p>{{ t('features.feat5Desc') }}</p>
           </div>
 
           <div class="bc reveal">
             <div class="bc-icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
             </div>
-            <h3>Çoklu Menü</h3>
-            <p>Öğle, akşam, kokteyl — aynı işletme için birden fazla menü yönetin.</p>
+            <h3>{{ t('features.feat6Title') }}</h3>
+            <p>{{ t('features.feat6Desc') }}</p>
           </div>
         </div>
       </div>
@@ -359,9 +424,9 @@ const submitContact = () => {
     <!-- ══ HOW IT WORKS ═══════════════════════════════════════════ -->
     <section class="section hiw-section" id="how">
       <div class="sec-wrap">
-        <div class="sec-tag reveal">Nasıl Çalışır</div>
-        <h2 class="sec-title reveal">3 adımda yayında olun</h2>
-        <p class="sec-sub reveal">Sıfırdan canlı bir dijital menüye 5 dakikadan kısa sürede ulaşın.</p>
+        <div class="sec-tag reveal">{{ t('how.tag') }}</div>
+        <h2 class="sec-title reveal">{{ t('how.title') }}</h2>
+        <p class="sec-sub reveal">{{ t('how.sub') }}</p>
 
         <div class="hiw-grid">
           <div class="hiw-step reveal">
@@ -369,8 +434,8 @@ const submitContact = () => {
             <div class="hiw-ico">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
-            <h3>Hesap Oluşturun</h3>
-            <p>30 saniyede ücretsiz kayıt olun. Kredi kartı yok, kurulum ücreti yok.</p>
+            <h3>{{ t('how.step1Title') }}</h3>
+            <p>{{ t('how.step1Desc') }}</p>
           </div>
           <div class="hiw-line reveal"></div>
           <div class="hiw-step reveal">
@@ -378,8 +443,8 @@ const submitContact = () => {
             <div class="hiw-ico">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             </div>
-            <h3>Menünüzü Kurun</h3>
-            <p>Kategoriler oluşturun, ürünleri fotoğrafları ve fiyatlarıyla ekleyin.</p>
+            <h3>{{ t('how.step2Title') }}</h3>
+            <p>{{ t('how.step2Desc') }}</p>
           </div>
           <div class="hiw-line reveal"></div>
           <div class="hiw-step reveal">
@@ -387,8 +452,8 @@ const submitContact = () => {
             <div class="hiw-ico">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M17 17v3M20 17v3M17 20h3"/></svg>
             </div>
-            <h3>QR Kodu Paylaşın</h3>
-            <p>QR kodunuzu indirin, yazdırın, masalara koyun. Hazır — müşteriler anında tarayabilir.</p>
+            <h3>{{ t('how.step3Title') }}</h3>
+            <p>{{ t('how.step3Desc') }}</p>
           </div>
         </div>
       </div>
@@ -397,12 +462,12 @@ const submitContact = () => {
     <!-- ══ TESTIMONIALS ═══════════════════════════════════════════ -->
     <section class="section testi-section">
       <div class="sec-wrap">
-        <div class="sec-tag reveal">Yorumlar</div>
-        <h2 class="sec-title reveal">İşletme sahipleri anlatıyor</h2>
+        <div class="sec-tag reveal">{{ t('testimonials.tag') }}</div>
+        <h2 class="sec-title reveal">{{ t('testimonials.title') }}</h2>
         <div class="testi-grid">
           <div class="testi-card reveal">
             <div class="testi-stars">★★★★★</div>
-            <p>"Basılı menüden geçtik ve bir daha geri dönmedik. Fiyat güncellemesi artık 3 gün beklemek yerine 10 saniye sürüyor."</p>
+            <p>{{ t('testimonials.t1Quote') }}</p>
             <div class="testi-who">
               <div class="testi-av" style="background:#768dfb20;color:#768dfb">MA</div>
               <div>
@@ -413,18 +478,18 @@ const submitContact = () => {
           </div>
           <div class="testi-card reveal">
             <div class="testi-stars">★★★★★</div>
-            <p>"Müşterilerim çok memnun. 'O ürün yok' demek zorunda kalmıyorum artık. Telefonumdan güncelliyorum, anında yansıyor."</p>
+            <p>{{ t('testimonials.t2Quote') }}</p>
             <div class="testi-who">
               <div class="testi-av" style="background:#f0f0f0;color:#555">SR</div>
               <div>
                 <strong>Sofia Ramirez</strong>
-                <span>El Patio · Barselona</span>
+                <span>El Patio · Barcelona</span>
               </div>
             </div>
           </div>
           <div class="testi-card reveal">
             <div class="testi-stars">★★★★★</div>
-            <p>"Kafe menümüzü 20 dakikada kurdum. QR kod mükemmel çalışıyor, menü harika görünüyor ve başlamak bize hiçbir şeye mâl olmadı."</p>
+            <p>{{ t('testimonials.t3Quote') }}</p>
             <div class="testi-who">
               <div class="testi-av" style="background:#19151810;color:#191518">KT</div>
               <div>
@@ -440,54 +505,54 @@ const submitContact = () => {
     <!-- ══ PRICING ════════════════════════════════════════════════ -->
     <section class="section price-section" id="pricing">
       <div class="sec-wrap">
-        <div class="sec-tag reveal">Fiyatlar</div>
-        <h2 class="sec-title reveal">Sade ve dürüst fiyatlandırma</h2>
-        <p class="sec-sub reveal">Ücretsiz başlayın. Hazır olduğunuzda yükseltin.</p>
+        <div class="sec-tag reveal">{{ t('pricing.tag') }}</div>
+        <h2 class="sec-title reveal">{{ t('pricing.title') }}</h2>
+        <p class="sec-sub reveal">{{ t('pricing.sub') }}</p>
         <div class="price-grid">
           <div class="price-card reveal">
-            <div class="pc-name">Ücretsiz</div>
-            <div class="pc-price">$0<span>/ay</span></div>
-            <p class="pc-desc">Başlamak için mükemmel. Kredi kartı gerekmez.</p>
+            <div class="pc-name">{{ t('pricing.free.name') }}</div>
+            <div class="pc-price">$0<span>{{ t('pricing.perMonth') }}</span></div>
+            <p class="pc-desc">{{ t('pricing.free.desc') }}</p>
             <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 menü</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>20 ürüne kadar</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>QR kod oluşturma</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Mobil uyumlu menü</li>
-              <li class="off"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Özel marka</li>
-              <li class="off"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Analitik</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f1') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f2') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f3') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f4') }}</li>
+              <li class="off"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>{{ t('pricing.free.f5') }}</li>
+              <li class="off"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>{{ t('pricing.free.f6') }}</li>
             </ul>
-            <button class="pc-btn-out" @click="goRegister">Ücretsiz Başla</button>
+            <button class="pc-btn-out" @click="goRegister">{{ t('pricing.free.cta') }}</button>
           </div>
 
           <div class="price-card featured reveal">
-            <div class="pc-badge">En Popüler</div>
-            <div class="pc-name">Pro</div>
-            <div class="pc-price">$10<span>/ay</span></div>
-            <p class="pc-desc">Büyüyen işletmeler için daha fazla güç.</p>
+            <div class="pc-badge">{{ t('pricing.mostPopular') }}</div>
+            <div class="pc-name">{{ t('pricing.pro.name') }}</div>
+            <div class="pc-price">$10<span>{{ t('pricing.perMonth') }}</span></div>
+            <p class="pc-desc">{{ t('pricing.pro.desc') }}</p>
             <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>3 işletme, 5 menü</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>100 ürüne kadar</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>QR kod oluşturma</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Mobil uyumlu menü</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Özel marka</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Analitik &amp; tarama istatistikleri</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f1') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f2') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f3') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f4') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f5') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f6') }}</li>
             </ul>
-            <button class="pc-btn-fill" @click="goRegister">Ücretsiz Deneyin</button>
+            <button class="pc-btn-fill" @click="goRegister">{{ t('pricing.pro.cta') }}</button>
           </div>
 
           <div class="price-card reveal">
-            <div class="pc-name">Premium</div>
-            <div class="pc-price">$25<span>/ay</span></div>
-            <p class="pc-desc">Tüm gücü isteyen işletmeler için.</p>
+            <div class="pc-name">{{ t('pricing.premium.name') }}</div>
+            <div class="pc-price">$25<span>{{ t('pricing.perMonth') }}</span></div>
+            <p class="pc-desc">{{ t('pricing.premium.desc') }}</p>
             <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sınırsız işletme</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Sınırsız menü &amp; ürün</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>QR kod oluşturma</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Çoklu dil desteği</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Öncelikli destek</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tüm analitik özellikleri</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f1') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f2') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f3') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f4') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f5') }}</li>
+              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f6') }}</li>
             </ul>
-            <button class="pc-btn-out" @click="goRegister">Hemen Başla</button>
+            <button class="pc-btn-out" @click="goRegister">{{ t('pricing.premium.cta') }}</button>
           </div>
         </div>
       </div>
@@ -497,18 +562,24 @@ const submitContact = () => {
     <section class="section faq-section" id="faq">
       <div class="sec-wrap faq-wrap">
         <div class="faq-left">
-          <div class="sec-tag reveal">SSS</div>
-          <h2 class="sec-title reveal" style="text-align:left">Sık sorulan sorular</h2>
-          <p class="sec-sub reveal" style="text-align:left;margin-left:0">Başlamadan önce bilmeniz gereken her şey.</p>
+          <div class="sec-tag reveal">{{ t('faq.tag') }}</div>
+          <h2 class="sec-title reveal" style="text-align:start">{{ t('faq.title') }}</h2>
+          <p class="sec-sub reveal" style="text-align:start;margin-left:0;margin-right:0">{{ t('faq.sub') }}</p>
         </div>
         <div class="faq-right reveal">
-          <div v-for="(item,i) in faqs" :key="i" class="faq-item" :class="{open:item.open}" @click="toggleFaq(i)">
+          <div
+            v-for="(item, i) in faqItems"
+            :key="i"
+            class="faq-item"
+            :class="{ open: faqOpen[i] }"
+            @click="toggleFaq(i)"
+          >
             <div class="faq-q">
               {{ item.q }}
-              <svg :class="['faq-arr',{rot:item.open}]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg :class="['faq-arr', { rot: faqOpen[i] }]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <transition name="faq">
-              <div v-if="item.open" class="faq-a">{{ item.a }}</div>
+              <div v-if="faqOpen[i]" class="faq-a">{{ item.a }}</div>
             </transition>
           </div>
         </div>
@@ -521,13 +592,13 @@ const submitContact = () => {
         <div class="cta-card reveal">
           <div class="cta-glow-l"></div>
           <div class="cta-glow-r"></div>
-          <h2 class="cta-h2">Dijitale geçmeye hazır mısınız?</h2>
-          <p class="cta-p">500+ restoranın kullandığı platforma katılın. Ücretsiz başlayın, kredi kartı gerekmez.</p>
+          <h2 class="cta-h2">{{ t('cta.title') }}</h2>
+          <p class="cta-p">{{ t('cta.sub') }}</p>
           <button class="cta-main" @click="goRegister" style="font-size:17px;padding:16px 36px">
-            Ücretsiz Menü Oluştur
+            {{ t('cta.btn') }}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
-          <p class="cta-note">Sonsuza kadar ücretsiz plan · Kredi kartı yok · 2 dakikada kurulum</p>
+          <p class="cta-note">{{ t('cta.note') }}</p>
         </div>
       </div>
     </section>
@@ -537,9 +608,9 @@ const submitContact = () => {
       <div class="sec-wrap">
         <div class="contact-inner reveal">
           <div class="contact-left">
-            <span class="sec-tag" style="color:#768dfb">İletişim</span>
-            <h2 class="contact-h2">Bir sorunuz mu var?</h2>
-            <p class="contact-sub">Ekibimiz size yardımcı olmaktan mutluluk duyar. Genellikle birkaç saat içinde yanıt veririz.</p>
+            <span class="sec-tag" style="color:#768dfb">{{ t('contact.tag') }}</span>
+            <h2 class="contact-h2">{{ t('contact.title') }}</h2>
+            <p class="contact-sub">{{ t('contact.sub') }}</p>
             <div class="contact-info">
               <div class="ci-item">
                 <span class="ci-icon">
@@ -558,24 +629,24 @@ const submitContact = () => {
 
           <form class="contact-form" @submit.prevent="submitContact">
             <div class="cf-group">
-              <label class="cf-label">Ad Soyad</label>
-              <input v-model="contactForm.name" type="text" class="cf-input" placeholder="Adınız Soyadınız" />
+              <label class="cf-label">{{ t('contact.nameLabel') }}</label>
+              <input v-model="contactForm.name" type="text" class="cf-input" :placeholder="t('contact.namePlaceholder')" />
             </div>
             <div class="cf-group">
-              <label class="cf-label">E-posta</label>
-              <input v-model="contactForm.email" type="email" class="cf-input" placeholder="ornek@email.com" />
+              <label class="cf-label">{{ t('contact.emailLabel') }}</label>
+              <input v-model="contactForm.email" type="email" class="cf-input" :placeholder="t('contact.emailPlaceholder')" />
             </div>
             <div class="cf-group">
-              <label class="cf-label">Mesajınız</label>
-              <textarea v-model="contactForm.message" class="cf-textarea" placeholder="Nasıl yardımcı olabiliriz?" rows="4"></textarea>
+              <label class="cf-label">{{ t('contact.messageLabel') }}</label>
+              <textarea v-model="contactForm.message" class="cf-textarea" :placeholder="t('contact.messagePlaceholder')" rows="4"></textarea>
             </div>
             <button type="submit" class="cf-submit" :class="{ sent: contactSent }">
               <template v-if="!contactSent">
-                Gönder
+                {{ t('contact.send') }}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
               </template>
               <template v-else>
-                Gönderildi
+                {{ t('contact.sent') }}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </template>
             </button>
@@ -592,31 +663,31 @@ const submitContact = () => {
             <span class="brand-icon"><span class="bi-q">Q</span></span>
             <span class="brand-name" style="color:#fff">Menusflow</span>
           </a>
-          <p>Restoranınız için dijital menü oluşturmanın en kolay yolu — menusflow.com</p>
+          <p>{{ t('footer.tagline') }}</p>
         </div>
         <div class="ft-links">
           <div class="ft-col">
-            <h4>Ürün</h4>
-            <a href="#features">Özellikler</a>
-            <a href="#pricing">Fiyatlar</a>
-            <a href="#how">Nasıl Çalışır</a>
+            <h4>{{ t('footer.product') }}</h4>
+            <a href="#features">{{ t('footer.features') }}</a>
+            <a href="#pricing">{{ t('footer.pricing') }}</a>
+            <a href="#how">{{ t('footer.howItWorks') }}</a>
           </div>
           <div class="ft-col">
-            <h4>Şirket</h4>
-            <a href="#">Hakkımızda</a>
-            <a href="#">Blog</a>
-            <a href="#">İletişim</a>
+            <h4>{{ t('footer.company') }}</h4>
+            <a href="#">{{ t('footer.about') }}</a>
+            <a href="#">{{ t('footer.blog') }}</a>
+            <a href="#">{{ t('footer.contact') }}</a>
           </div>
           <div class="ft-col">
-            <h4>Yasal</h4>
-            <a href="#">Gizlilik Politikası</a>
-            <a href="#">Kullanım Şartları</a>
+            <h4>{{ t('footer.legal') }}</h4>
+            <a href="#">{{ t('footer.privacy') }}</a>
+            <a href="#">{{ t('footer.terms') }}</a>
           </div>
         </div>
       </div>
       <div class="ft-bottom">
-        <span>© 2025 Menusflow. Tüm hakları saklıdır.</span>
-        <span>Dünya genelindeki restoranlar için sevgiyle yapıldı ♥</span>
+        <span>{{ t('footer.copyright') }}</span>
+        <span>{{ t('footer.madeWith') }}</span>
       </div>
     </footer>
 
@@ -745,7 +816,7 @@ const submitContact = () => {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .nav-links a {
   font-size: 14px;
@@ -780,7 +851,7 @@ const submitContact = () => {
 .btn-pill:hover { opacity:.9; transform:translateY(-1px); box-shadow: 0 5px 18px var(--brand-glow); }
 .hamburger {
   display:none; flex-direction:column; gap:5px;
-  background:none; border:none; cursor:pointer; padding:6px; margin-left:auto;
+  background:none; border:none; cursor:pointer; padding:6px; margin-inline-start:auto;
 }
 .hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:transform .22s, opacity .22s; }
 .mobile-drawer {
@@ -795,6 +866,97 @@ const submitContact = () => {
 .mobile-drawer a:hover { color:var(--text); background:var(--bg-soft); }
 .drawer-foot { display:flex; flex-direction:column; gap:8px; padding: 12px 0 0; border-top:1px solid var(--border); margin-top:8px; }
 .w100 { width:100%; text-align:center; justify-content:center; }
+
+/* Mobile language switcher */
+.mobile-lang {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.ml-btn {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .05em;
+}
+.ml-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* Language Switcher Dropdown */
+.lang-switcher { position: relative; }
+.lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  background: transparent;
+  border: 1.5px solid var(--border);
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+  letter-spacing: .04em;
+}
+.lang-btn:hover { color: var(--text); background: var(--bg-soft); border-color: #c4c8f0; }
+.lang-arrow {
+  transition: transform .2s;
+  color: var(--text-soft);
+}
+.lang-arrow.open { transform: rotate(180deg); }
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-end: 0;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.1);
+  overflow: hidden;
+  min-width: 150px;
+  z-index: 300;
+}
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: var(--text-mid);
+  transition: background .12s, color .12s;
+  text-align: start;
+}
+.lang-option:hover { background: var(--bg-soft); color: var(--text); }
+.lang-option.active { color: var(--brand); background: rgba(118,141,251,.06); }
+.lo-code { font-weight: 700; font-size: 12px; letter-spacing: .06em; width: 28px; }
+.lo-name { font-size: 13px; }
+
+/* Dropdown transition */
+.lang-drop-enter-active,
+.lang-drop-leave-active { transition: opacity .18s, transform .18s; }
+.lang-drop-enter-from,
+.lang-drop-leave-to { opacity: 0; transform: translateY(-6px); }
+
 @media(max-width:768px){
   .nav-links,.nav-ctas{display:none}
   .hamburger{display:flex}
@@ -984,7 +1146,6 @@ const submitContact = () => {
   animation: phoneFloat 5s ease-in-out infinite;
   position: relative;
   z-index: 1;
-  /* size reference for badge positioning */
   width: 258px;
 }
 @keyframes phoneFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
@@ -1051,7 +1212,6 @@ const submitContact = () => {
   color: var(--text);
   white-space: nowrap;
 }
-/* Badges sit ON the phone — right side overflows the phone shell */
 .fb-top { top: 42px;  right: -88px; animation: fbFloat 4s ease-in-out infinite; }
 .fb-bot { bottom: 90px; left: -88px; animation: fbFloat 4s 2s ease-in-out infinite; }
 @keyframes fbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -1101,7 +1261,7 @@ const submitContact = () => {
   border: 1.5px solid var(--border);
   border-radius: 20px;
   padding: 36px 28px;
-  text-align: left;
+  text-align: start;
   transition: box-shadow .2s, transform .2s, border-color .2s;
 }
 .pb-card:hover { box-shadow:0 10px 40px rgba(0,0,0,.07); transform:translateY(-4px); border-color:#d0d4f5; }
@@ -1224,7 +1384,7 @@ const submitContact = () => {
   border:1.5px solid var(--border);
   border-radius:20px;
   padding:32px 28px;
-  text-align:left;
+  text-align:start;
   transition:box-shadow .2s, transform .2s;
 }
 .testi-card:hover { box-shadow:0 12px 40px rgba(0,0,0,.07); transform:translateY(-4px); }
@@ -1246,7 +1406,7 @@ const submitContact = () => {
   border:1.5px solid var(--border);
   border-radius:24px;
   padding:40px 36px;
-  text-align:left;
+  text-align:start;
   position:relative;
   transition:box-shadow .2s, transform .2s;
 }
