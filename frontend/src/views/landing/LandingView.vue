@@ -13,17 +13,8 @@ const langMenuOpen = ref(false)
 
 const isRtl = computed(() => RTL_LOCALES.includes(locale.value as SupportedLocale))
 
-const LANG_LABELS: Record<SupportedLocale, string> = {
-  tr: 'TR',
-  en: 'EN',
-  ar: 'AR',
-}
-
-const LANG_NAMES: Record<SupportedLocale, string> = {
-  tr: 'Türkçe',
-  en: 'English',
-  ar: 'العربية',
-}
+const LANG_LABELS: Record<SupportedLocale, string> = { tr: 'TR', en: 'EN', ar: 'AR' }
+const LANG_NAMES: Record<SupportedLocale, string> = { tr: 'Türkçe', en: 'English', ar: 'العربية' }
 
 function setLocale(lang: SupportedLocale) {
   locale.value = lang
@@ -31,7 +22,6 @@ function setLocale(lang: SupportedLocale) {
   langMenuOpen.value = false
 }
 
-// Sync html dir attribute with locale
 watch(isRtl, (rtl) => {
   document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr')
   document.documentElement.setAttribute('lang', locale.value)
@@ -42,13 +32,11 @@ const handleScroll = () => { scrolled.value = window.scrollY > 40 }
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })
   document.addEventListener('click', (e) => {
-    if (!(e.target as Element)?.closest('.lang-switcher')) {
-      langMenuOpen.value = false
-    }
+    if (!(e.target as Element)?.closest('.lang-switcher')) langMenuOpen.value = false
   })
   const io = new IntersectionObserver(
     (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in') }),
-    { threshold: 0.1 }
+    { threshold: 0.07 }
   )
   document.querySelectorAll('.reveal').forEach(el => io.observe(el))
 })
@@ -57,401 +45,689 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 const goRegister = () => router.push('/register')
 const goLogin    = () => router.push('/login')
 
-const faqOpen = ref<boolean[]>([false, false, false, false])
+const faqOpen = ref<boolean[]>([false, false, false, false, false])
 const toggleFaq = (i: number) => { faqOpen.value[i] = !faqOpen.value[i] }
-
 const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string }>)
 
-const contactForm = ref({ name: '', email: '', message: '' })
-const contactSent = ref(false)
-const submitContact = () => {
-  if (!contactForm.value.name || !contactForm.value.email || !contactForm.value.message) return
-  contactSent.value = true
-  setTimeout(() => {
-    contactSent.value = false
-    contactForm.value = { name: '', email: '', message: '' }
-  }, 3000)
-}
 </script>
 
 <template>
   <div class="land" :dir="isRtl ? 'rtl' : 'ltr'">
 
-    <!-- ══ NAV ══════════════════════════════════════════════════ -->
-    <header :class="['nav', { scrolled }]">
-      <div class="nav-wrap">
-        <a href="#" class="brand">
-          <span class="brand-icon"><span class="bi-q">Q</span></span>
-          <span class="brand-name">Menusflow</span>
-        </a>
+    <!-- ══ NAV ══════════════════════════════════════════════════════ -->
+    <div class="nav-wrap">
+      <header :class="['nav', { scrolled }]">
+        <div class="nav-inner">
 
-        <nav class="nav-links">
-          <a href="#features">{{ t('nav.features') }}</a>
-          <a href="#how">{{ t('nav.howItWorks') }}</a>
-          <a href="#pricing">{{ t('nav.pricing') }}</a>
-          <a href="#faq">{{ t('nav.faq') }}</a>
-          <a href="#contact">{{ t('nav.contact') }}</a>
-        </nav>
+          <!-- Logo -->
+          <a href="#" class="brand">
+            <span class="brand-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="2" width="13" height="18" rx="2" fill="#3b5bdb" opacity="0.9"/>
+                <rect x="7" y="6" width="9" height="20" rx="2" fill="#3b5bdb" transform="rotate(-8 7 6)"/>
+                <rect x="5" y="4" width="11" height="17" rx="2" fill="#3b5bdb" opacity="0.6" transform="rotate(5 5 4)"/>
+              </svg>
+            </span>
+            <span class="brand-text">
+              <span class="brand-gold">menus</span><span class="brand-white">flow</span>
+            </span>
+          </a>
 
-        <div class="nav-ctas">
-          <!-- Language Switcher -->
-          <div class="lang-switcher">
-            <button class="lang-btn" @click.stop="langMenuOpen = !langMenuOpen" :aria-expanded="langMenuOpen">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              {{ LANG_LABELS[locale as SupportedLocale] }}
-              <svg :class="['lang-arrow', { open: langMenuOpen }]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <transition name="lang-drop">
-              <div v-if="langMenuOpen" class="lang-menu">
-                <button
-                  v-for="lang in SUPPORTED_LOCALES"
-                  :key="lang"
-                  :class="['lang-option', { active: locale === lang }]"
-                  @click="setLocale(lang)"
-                  :dir="lang === 'ar' ? 'rtl' : 'ltr'"
-                >
-                  <span class="lo-code">{{ LANG_LABELS[lang] }}</span>
-                  <span class="lo-name">{{ LANG_NAMES[lang] }}</span>
-                </button>
-              </div>
-            </transition>
+          <!-- Center links -->
+          <nav class="nav-links">
+            <div class="nav-link-wrap">
+              <a href="#features" class="nav-link">
+                {{ t('nav.features') }}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </a>
+            </div>
+            <a href="#how" class="nav-link">{{ t('nav.howItWorks') }}</a>
+            <a href="#pricing" class="nav-link">{{ t('nav.pricing') }}</a>
+            <a href="#faq" class="nav-link">{{ t('nav.faq') }}</a>
+          </nav>
+
+          <!-- Right actions -->
+          <div class="nav-actions">
+            <!-- Lang switcher as icon -->
+            <div class="lang-switcher">
+              <button class="nav-icon-btn" @click.stop="langMenuOpen = !langMenuOpen" :title="LANG_NAMES[locale as SupportedLocale]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </button>
+              <transition name="fade-down">
+                <div v-if="langMenuOpen" class="lang-menu">
+                  <button
+                    v-for="lang in SUPPORTED_LOCALES"
+                    :key="lang"
+                    :class="['lang-opt', { active: locale === lang }]"
+                    @click="setLocale(lang)"
+                  >
+                    <span>{{ LANG_LABELS[lang] }}</span>
+                    <span class="lang-name">{{ LANG_NAMES[lang] }}</span>
+                  </button>
+                </div>
+              </transition>
+            </div>
+
+            <button class="nav-login" @click="goLogin">{{ t('nav.login') }}</button>
+            <button class="nav-cta" @click="goRegister">{{ t('nav.getStarted') }}</button>
           </div>
 
-          <button class="btn-ghost" @click="goLogin">{{ t('nav.login') }}</button>
-          <button class="btn-pill" @click="goRegister">{{ t('nav.getStarted') }}</button>
+          <button class="hamburger" :class="{ open: mobileOpen }" @click="mobileOpen = !mobileOpen">
+            <span /><span /><span />
+          </button>
         </div>
+      </header>
 
-        <button class="hamburger" @click="mobileOpen = !mobileOpen" :class="{ open: mobileOpen }">
-          <span /><span /><span />
-        </button>
-      </div>
-
+      <!-- Mobile drawer — sits outside the floating nav card -->
       <div :class="['mobile-drawer', { open: mobileOpen }]">
-        <a href="#features"  @click="mobileOpen=false">{{ t('nav.features') }}</a>
-        <a href="#how"       @click="mobileOpen=false">{{ t('nav.howItWorks') }}</a>
-        <a href="#pricing"   @click="mobileOpen=false">{{ t('nav.pricing') }}</a>
-        <a href="#faq"       @click="mobileOpen=false">{{ t('nav.faq') }}</a>
-
-        <!-- Mobile lang switcher -->
-        <div class="mobile-lang">
-          <button
-            v-for="lang in SUPPORTED_LOCALES"
-            :key="lang"
+        <a href="#features" @click="mobileOpen=false">{{ t('nav.features') }}</a>
+        <a href="#how" @click="mobileOpen=false">{{ t('nav.howItWorks') }}</a>
+        <a href="#pricing" @click="mobileOpen=false">{{ t('nav.pricing') }}</a>
+        <a href="#faq" @click="mobileOpen=false">{{ t('nav.faq') }}</a>
+        <div class="mob-lang">
+          <button v-for="lang in SUPPORTED_LOCALES" :key="lang"
             :class="['ml-btn', { active: locale === lang }]"
-            @click="setLocale(lang)"
-          >{{ LANG_LABELS[lang] }}</button>
+            @click="setLocale(lang)">
+            {{ LANG_LABELS[lang] }}
+          </button>
         </div>
-
-        <div class="drawer-foot">
-          <button class="btn-ghost w100" @click="goLogin">{{ t('nav.login') }}</button>
-          <button class="btn-pill w100"  @click="goRegister">{{ t('nav.getStarted') }}</button>
+        <div class="mob-foot">
+          <button class="nav-login w-full" @click="goLogin">{{ t('nav.login') }}</button>
+          <button class="nav-cta w-full" @click="goRegister">{{ t('nav.getStarted') }}</button>
         </div>
       </div>
-    </header>
+    </div>
 
-    <!-- ══ HERO ══════════════════════════════════════════════════ -->
+    <!-- ══ HERO ══════════════════════════════════════════════════════ -->
     <section class="hero">
-      <div class="hero-dots"></div>
-      <div class="hero-blob b1"></div>
-      <div class="hero-blob b2"></div>
+      <div class="hero-glow"></div>
+      <div class="container hero-inner">
 
-      <div class="hero-wrap">
-        <!-- Left -->
-        <div class="hero-left">
-          <div class="hero-badge">
-            <span class="pulse-dot"></span>
+        <div class="hero-text">
+          <div class="eyebrow reveal">
+            <span class="pulse"></span>
             {{ t('hero.badge') }}
           </div>
 
-          <h1 class="hero-h1">
+          <h1 class="hero-h1 reveal">
             {{ t('hero.h1Line1') }}<br/>
-            <em>{{ t('hero.h1Line2') }}</em><br/>
-            {{ t('hero.h1Line3') }}
+            <!-- {{ t('hero.h1Line2') }}<br/> -->
+            <em>{{ t('hero.h1Line3') }}</em>
           </h1>
 
-          <p class="hero-sub">{{ t('hero.sub') }}</p>
+          <p class="hero-sub reveal">{{ t('hero.sub') }}</p>
 
-          <div class="hero-btns">
-            <button class="cta-main" @click="goRegister">
+          <div class="hero-btns reveal">
+            <button class="btn-hero-primary" @click="goRegister">
               {{ t('hero.ctaMain') }}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
-            <a href="#how" class="cta-ghost">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
-              {{ t('hero.ctaDemo') }}
-            </a>
+            <a href="#features" class="btn-hero-ghost">{{ t('hero.ctaDemo') }}</a>
           </div>
 
-          <div class="hero-stats">
-            <div class="hs-item">
-              <strong>500+</strong>
+          <div class="hero-stats reveal">
+            <div class="stat">
+              <strong>{{ t('hero.stat1Value') }}</strong>
               <span>{{ t('hero.stat1Label') }}</span>
             </div>
-            <div class="hs-sep"></div>
-            <div class="hs-item">
-              <strong>50K+</strong>
+            <div class="stat-div"></div>
+            <div class="stat">
+              <strong>{{ t('hero.stat2Value') }}</strong>
               <span>{{ t('hero.stat2Label') }}</span>
             </div>
-            <div class="hs-sep"></div>
-            <div class="hs-item">
+            <div class="stat-div"></div>
+            <div class="stat">
               <strong>{{ t('hero.stat3Value') }}</strong>
               <span>{{ t('hero.stat3Label') }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Right — Phone -->
-        <div class="hero-right">
+        <!-- Phone Mockup -->
+        <div class="hero-phone reveal">
           <div class="phone-halo"></div>
-          <div class="phone-card">
-            <div class="phone-shell">
-              <div class="p-island"></div>
-              <div class="p-screen">
-                <div class="pm-header">
-                  <div class="pm-avi">🍕</div>
-                  <div>
-                    <div class="pm-name">La Bella Cucina</div>
-                    <div class="pm-loc">Italian · Milano</div>
-                  </div>
+          <div class="phone">
+            <div class="phone-island"></div>
+            <div class="phone-screen">
+              <div class="ps-ai-header">
+                <div class="ps-ai-logo">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L9.91 8.26 3.5 9.27l4.5 4.39-1.06 6.34L12 17l5.06 3-1.06-6.34 4.5-4.39-6.41-1.01L12 2z"/></svg>
                 </div>
-                <div class="pm-tabs">
-                  <span class="pm-tab active">{{ t('hero.phoneCat1') }}</span>
-                  <span class="pm-tab">{{ t('hero.phoneCat2') }}</span>
-                  <span class="pm-tab">{{ t('hero.phoneCat3') }}</span>
-                  <span class="pm-tab">{{ t('hero.phoneCat4') }}</span>
+                <div class="ps-ai-meta">
+                  <div class="ps-ai-title">{{ t('hero.phoneAiTitle') }}</div>
+                  <div class="ps-ai-sub">{{ t('hero.phoneAiSub') }}</div>
                 </div>
-                <div class="pm-list">
-                  <div class="pm-item">
-                    <div class="pm-emoji">🥗</div>
-                    <div class="pm-info">
-                      <div class="pm-iname">Caesar Salad</div>
-                      <div class="pm-idesc">{{ t('hero.phoneItem1Desc') }}</div>
-                      <div class="pm-iprice">₺180</div>
-                    </div>
-                    <button class="pm-add">+</button>
-                  </div>
-                  <div class="pm-item">
-                    <div class="pm-emoji">🍞</div>
-                    <div class="pm-info">
-                      <div class="pm-iname">Bruschetta</div>
-                      <div class="pm-idesc">{{ t('hero.phoneItem2Desc') }}</div>
-                      <div class="pm-iprice">₺120</div>
-                    </div>
-                    <button class="pm-add">+</button>
-                  </div>
-                  <div class="pm-item">
-                    <div class="pm-emoji">🦑</div>
-                    <div class="pm-info">
-                      <div class="pm-iname">Calamari</div>
-                      <div class="pm-idesc">{{ t('hero.phoneItem3Desc') }}</div>
-                      <div class="pm-iprice">₺220</div>
-                    </div>
-                    <button class="pm-add">+</button>
-                  </div>
+                <div class="ps-ai-pulse"></div>
+              </div>
+              <div class="ps-ai-stats">
+                <div class="ps-ai-stat">
+                  <div class="ps-ai-stat-label">{{ t('hero.phoneStatLabel1') }}</div>
+                  <div class="ps-ai-stat-val">847</div>
+                  <div class="ps-ai-stat-delta">↑ 12%</div>
                 </div>
-                <div class="pm-qrbar">
-                  <svg width="24" height="24" viewBox="0 0 80 80" fill="none">
-                    <rect x="4" y="4" width="28" height="28" rx="4" stroke="#768dfb" stroke-width="5"/>
-                    <rect x="14" y="14" width="8" height="8" fill="#768dfb"/>
-                    <rect x="48" y="4" width="28" height="28" rx="4" stroke="#768dfb" stroke-width="5"/>
-                    <rect x="58" y="14" width="8" height="8" fill="#768dfb"/>
-                    <rect x="4" y="48" width="28" height="28" rx="4" stroke="#768dfb" stroke-width="5"/>
-                    <rect x="14" y="58" width="8" height="8" fill="#768dfb"/>
-                    <rect x="48" y="52" width="6" height="6" fill="#768dfb"/>
-                    <rect x="58" y="48" width="6" height="6" fill="#768dfb"/>
-                    <rect x="66" y="56" width="6" height="6" fill="#768dfb"/>
-                    <rect x="48" y="62" width="6" height="6" fill="#768dfb"/>
-                    <rect x="58" y="68" width="14" height="6" fill="#768dfb"/>
-                  </svg>
-                  <span>{{ t('hero.phoneScan') }}</span>
+                <div class="ps-ai-stat">
+                  <div class="ps-ai-stat-label">{{ t('hero.phoneStatLabel2') }}</div>
+                  <div class="ps-ai-stat-val">3:42</div>
+                  <div class="ps-ai-stat-delta">↑ 8%</div>
                 </div>
               </div>
-              <div class="p-bar"></div>
+              <div class="ps-ai-insights">
+                <div class="ps-ai-card important">
+                  <span class="ps-ai-dot"></span>
+                  <div class="ps-ai-card-body-wrap">
+                    <div class="ps-ai-card-title">{{ t('hero.phoneAiInsight1Title') }}</div>
+                    <div class="ps-ai-card-body">{{ t('hero.phoneAiInsight1Body') }}</div>
+                  </div>
+                </div>
+                <div class="ps-ai-card suggestion">
+                  <span class="ps-ai-dot"></span>
+                  <div class="ps-ai-card-body-wrap">
+                    <div class="ps-ai-card-title">{{ t('hero.phoneAiInsight2Title') }}</div>
+                    <div class="ps-ai-card-body">{{ t('hero.phoneAiInsight2Body') }}</div>
+                  </div>
+                </div>
+                <div class="ps-ai-card info">
+                  <span class="ps-ai-dot"></span>
+                  <div class="ps-ai-card-body-wrap">
+                    <div class="ps-ai-card-title">{{ t('hero.phoneAiInsight3Title') }}</div>
+                    <div class="ps-ai-card-body">{{ t('hero.phoneAiInsight3Body') }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ps-ai-chart">
+                <div class="ps-ai-chart-label">{{ t('hero.phoneChartLabel') }}</div>
+                <div class="ps-ai-chart-bars">
+                  <div class="ps-ai-chart-bar" style="height:32%"></div>
+                  <div class="ps-ai-chart-bar" style="height:54%"></div>
+                  <div class="ps-ai-chart-bar" style="height:42%"></div>
+                  <div class="ps-ai-chart-bar" style="height:76%"></div>
+                  <div class="ps-ai-chart-bar" style="height:58%"></div>
+                  <div class="ps-ai-chart-bar peak" style="height:94%"></div>
+                  <div class="ps-ai-chart-bar" style="height:48%"></div>
+                </div>
+              </div>
+              <div class="ps-ai-cta">
+                {{ t('hero.phoneAiCta') }}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </div>
             </div>
-          <div class="fb fb-top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ t('hero.phoneLive') }}
-            </div>
-            <div class="fb fb-bot">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {{ t('hero.phoneScans') }}
-            </div>
+            <div class="phone-bar"></div>
+          </div>
+          <!-- Floating chips -->
+          <div class="chip chip-top">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ t('hero.phoneLive') }}
+          </div>
+          <div class="chip chip-bot">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            {{ t('hero.phoneScans') }}
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ MARQUEE ════════════════════════════════════════════════ -->
-    <div class="marquee-rail reveal">
+    <!-- ══ MARQUEE ═══════════════════════════════════════════════════ -->
+    <div class="marquee-wrap reveal">
       <div class="marquee-track">
-        <span>🍝 Bella Roma</span>
-        <span class="sep">·</span>
-        <span>🍣 Sakura House</span>
-        <span class="sep">·</span>
-        <span>🍔 Burger District</span>
-        <span class="sep">·</span>
-        <span>☕ The Brew Co.</span>
-        <span class="sep">·</span>
-        <span>🥩 Steakwood</span>
-        <span class="sep">·</span>
-        <span>🌮 Taco Verde</span>
-        <span class="sep">·</span>
-        <span>🥗 Green Table</span>
-        <span class="sep">·</span>
-        <span>🍜 Noodle Lab</span>
-        <span class="sep">·</span>
-        <!-- duplicate for seamless loop -->
-        <span>🍝 Bella Roma</span>
-        <span class="sep">·</span>
-        <span>🍣 Sakura House</span>
-        <span class="sep">·</span>
-        <span>🍔 Burger District</span>
-        <span class="sep">·</span>
-        <span>☕ The Brew Co.</span>
-        <span class="sep">·</span>
-        <span>🥩 Steakwood</span>
-        <span class="sep">·</span>
-        <span>🌮 Taco Verde</span>
-        <span class="sep">·</span>
-        <span>🥗 Green Table</span>
-        <span class="sep">·</span>
-        <span>🍜 Noodle Lab</span>
-        <span class="sep">·</span>
+        <span>Bella Roma</span><span class="dot">·</span>
+        <span>Sakura House</span><span class="dot">·</span>
+        <span>Burger District</span><span class="dot">·</span>
+        <span>The Brew Co.</span><span class="dot">·</span>
+        <span>Steakwood</span><span class="dot">·</span>
+        <span>Taco Verde</span><span class="dot">·</span>
+        <span>Green Table</span><span class="dot">·</span>
+        <span>Noodle Lab</span><span class="dot">·</span>
+        <span>Patisserie Blanc</span><span class="dot">·</span>
+        <span>Harbor Grill</span><span class="dot">·</span>
+        <!-- duplicate -->
+        <span>Bella Roma</span><span class="dot">·</span>
+        <span>Sakura House</span><span class="dot">·</span>
+        <span>Burger District</span><span class="dot">·</span>
+        <span>The Brew Co.</span><span class="dot">·</span>
+        <span>Steakwood</span><span class="dot">·</span>
+        <span>Taco Verde</span><span class="dot">·</span>
+        <span>Green Table</span><span class="dot">·</span>
+        <span>Noodle Lab</span><span class="dot">·</span>
+        <span>Patisserie Blanc</span><span class="dot">·</span>
+        <span>Harbor Grill</span><span class="dot">·</span>
       </div>
     </div>
 
-    <!-- ══ PROBLEM ════════════════════════════════════════════════ -->
-    <section class="section pb-section">
-      <div class="sec-wrap">
-        <div class="sec-tag reveal">{{ t('problem.tag') }}</div>
-        <h2 class="sec-title reveal" style="white-space:pre-line">{{ t('problem.title') }}</h2>
-        <p class="sec-sub reveal">{{ t('problem.sub') }}</p>
-        <div class="pb-grid">
-          <div class="pb-card reveal">
-            <div class="pb-icon">💸</div>
-            <h3>{{ t('problem.card1Title') }}</h3>
-            <p>{{ t('problem.card1Desc') }}</p>
+    <!-- ══ AI MENU ADVISOR ═══════════════════════════════════════════ -->
+    <section class="section ai-section">
+      <div class="container">
+        <div class="ai-layout">
+          <div class="ai-insights reveal">
+            <div class="insight-card important">
+              <div class="insight-dot"></div>
+              <div class="insight-body-wrap">
+                <span class="insight-severity sev-important">{{ t('ai.severityImportant') }}</span>
+                <div class="insight-title">{{ t('ai.insight1Title') }}</div>
+                <div class="insight-body">{{ t('ai.insight1Body') }}</div>
+              </div>
+            </div>
+            <div class="insight-card suggestion">
+              <div class="insight-dot"></div>
+              <div class="insight-body-wrap">
+                <span class="insight-severity sev-suggestion">{{ t('ai.severitySuggestion') }}</span>
+                <div class="insight-title">{{ t('ai.insight2Title') }}</div>
+                <div class="insight-body">{{ t('ai.insight2Body') }}</div>
+              </div>
+            </div>
+            <div class="insight-card info">
+              <div class="insight-dot"></div>
+              <div class="insight-body-wrap">
+                <span class="insight-severity sev-info">{{ t('ai.severityInfo') }}</span>
+                <div class="insight-title">{{ t('ai.insight3Title') }}</div>
+                <div class="insight-body">{{ t('ai.insight3Body') }}</div>
+              </div>
+            </div>
           </div>
-          <div class="pb-card reveal">
-            <div class="pb-icon">⏳</div>
-            <h3>{{ t('problem.card2Title') }}</h3>
-            <p>{{ t('problem.card2Desc') }}</p>
-          </div>
-          <div class="pb-card reveal">
-            <div class="pb-icon">😤</div>
-            <h3>{{ t('problem.card3Title') }}</h3>
-            <p>{{ t('problem.card3Desc') }}</p>
+
+          <div class="ai-text reveal">
+            <div class="tag">{{ t('ai.tag') }}</div>
+            <h2 class="sec-title" style="white-space:pre-line">{{ t('ai.title') }}</h2>
+            <p class="sec-sub">{{ t('ai.sub') }}</p>
+            <ul class="check-list">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('ai.point1') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('ai.point2') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('ai.point3') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('ai.point4') }}
+              </li>
+            </ul>
+            <button class="btn-outline" @click="goRegister">{{ t('ai.cta') }} →</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ FEATURES (Bento) ═══════════════════════════════════════ -->
-    <section class="section ft-section" id="features">
-      <div class="sec-wrap">
-        <div class="sec-tag reveal">{{ t('features.tag') }}</div>
-        <h2 class="sec-title reveal" style="white-space:pre-line">{{ t('features.title') }}</h2>
-        <p class="sec-sub reveal">{{ t('features.sub') }}</p>
+    <!-- ══ FEATURES ══════════════════════════════════════════════════ -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="sec-header reveal">
+          <div class="tag">{{ t('features.tag') }}</div>
+          <h2 class="sec-title" style="white-space:pre-line">{{ t('features.title') }}</h2>
+          <p class="sec-sub">{{ t('features.sub') }}</p>
+        </div>
 
-        <div class="bento">
-          <!-- Big left -->
-          <div class="bc bc-tall reveal">
-            <div class="bc-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <div class="feat-grid">
+          <!-- Card 1: Update menus -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             </div>
             <h3>{{ t('features.feat1Title') }}</h3>
             <p>{{ t('features.feat1Desc') }}</p>
-            <div class="bc-visual editor-vis">
-              <div class="ev-row"><span class="ev-tag">{{ t('features.editorCat1') }}</span><span class="ev-tag active">{{ t('features.editorCat2') }}</span><span class="ev-tag">{{ t('features.editorCat3') }}</span></div>
-              <div class="ev-item"><span>🍕 Margherita</span><span class="ev-price">₺180</span></div>
-              <div class="ev-item"><span>🥗 Caesar</span><span class="ev-price">₺120</span></div>
-              <div class="ev-item new"><span>{{ t('features.editorAddNew') }}</span></div>
+            <div class="feat-ui">
+              <div class="fui-row">
+                <span class="fui-item">{{ t('features.demoDish1') }}</span>
+                <span class="fui-price">{{ t('features.demoPrice1') }}</span>
+                <span class="fui-tag live">{{ t('features.demoLive') }}</span>
+              </div>
+              <div class="fui-row">
+                <span class="fui-item">{{ t('features.demoDish2') }}</span>
+                <span class="fui-price">{{ t('features.demoPrice2') }}</span>
+                <span class="fui-tag updating">{{ t('features.demoSaving') }}</span>
+              </div>
+              <div class="fui-row">
+                <span class="fui-item">{{ t('features.demoDish3') }}</span>
+                <span class="fui-price">{{ t('features.demoPrice3') }}</span>
+                <span class="fui-tag out">{{ t('features.demoSoldOut') }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- Top-right 2 cards -->
-          <div class="bc reveal">
-            <div class="bc-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M14 17h.01M17 14h.01M20 14h.01M17 17v3M20 17v3M17 20h3"/></svg>
+          <!-- Card 2: Multilingual -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </div>
             <h3>{{ t('features.feat2Title') }}</h3>
             <p>{{ t('features.feat2Desc') }}</p>
+            <div class="feat-langs">
+              <span class="lang-pill active">English</span>
+              <span class="lang-pill">Türkçe</span>
+              <span class="lang-pill">العربية</span>
+              <span class="lang-pill">Français</span>
+              <span class="lang-pill dim">+12</span>
+            </div>
           </div>
 
-          <div class="bc reveal">
-            <div class="bc-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <!-- Card 3: Allergens -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <h3>{{ t('features.feat3Title') }}</h3>
             <p>{{ t('features.feat3Desc') }}</p>
+            <div class="feat-allergens">
+              <div class="al-row"><span class="al-badge">GF</span><span>{{ t('features.allergenGF') }}</span></div>
+              <div class="al-row"><span class="al-badge">V</span><span>{{ t('features.allergenV') }}</span></div>
+              <div class="al-row"><span class="al-badge">N</span><span>{{ t('features.allergenN') }}</span></div>
+              <div class="al-cal">485 kcal</div>
+            </div>
           </div>
 
-          <!-- Bottom wide -->
-          <div class="bc bc-wide reveal">
-            <div class="bc-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <!-- Card 4: Multi-location -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
             <h3>{{ t('features.feat4Title') }}</h3>
             <p>{{ t('features.feat4Desc') }}</p>
-            <div class="bc-visual var-vis">
-              <div class="vv-chip">{{ t('features.varSmall') }}</div>
-              <div class="vv-chip active">{{ t('features.varMedium') }}</div>
-              <div class="vv-chip">{{ t('features.varLarge') }}</div>
-              <div class="vv-chip">{{ t('features.varExtraCheese') }}</div>
-              <div class="vv-chip">{{ t('features.varSpicy') }}</div>
+            <div class="feat-branches">
+              <div class="branch-item"><span class="branch-dot"></span>{{ t('features.branch1') }} <span class="branch-count">3 {{ t('features.menusShort') }}</span></div>
+              <div class="branch-item"><span class="branch-dot"></span>{{ t('features.branch2') }} <span class="branch-count">2 {{ t('features.menusShort') }}</span></div>
+              <div class="branch-item"><span class="branch-dot"></span>{{ t('features.branch3') }} <span class="branch-count">4 {{ t('features.menusShort') }}</span></div>
             </div>
           </div>
 
-          <div class="bc reveal">
-            <div class="bc-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <!-- Card 5: QR per table -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
             </div>
             <h3>{{ t('features.feat5Title') }}</h3>
             <p>{{ t('features.feat5Desc') }}</p>
+            <div class="feat-tables">
+              <div class="table-chip">T1</div>
+              <div class="table-chip">T2</div>
+              <div class="table-chip">T3</div>
+              <div class="table-chip active">T4</div>
+              <div class="table-chip">T5</div>
+              <div class="table-chip">T6</div>
+            </div>
           </div>
 
-          <div class="bc reveal">
-            <div class="bc-icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <!-- Card 6: Analytics -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             </div>
             <h3>{{ t('features.feat6Title') }}</h3>
             <p>{{ t('features.feat6Desc') }}</p>
+            <div class="feat-chart">
+              <div class="chart-bar" style="height:45%"></div>
+              <div class="chart-bar" style="height:65%"></div>
+              <div class="chart-bar" style="height:40%"></div>
+              <div class="chart-bar active" style="height:88%"></div>
+              <div class="chart-bar" style="height:72%"></div>
+              <div class="chart-bar" style="height:55%"></div>
+              <div class="chart-bar" style="height:80%"></div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ HOW IT WORKS ═══════════════════════════════════════════ -->
-    <section class="section hiw-section" id="how">
-      <div class="sec-wrap">
-        <div class="sec-tag reveal">{{ t('how.tag') }}</div>
-        <h2 class="sec-title reveal">{{ t('how.title') }}</h2>
-        <p class="sec-sub reveal">{{ t('how.sub') }}</p>
-
-        <div class="hiw-grid">
-          <div class="hiw-step reveal">
-            <div class="hiw-num">01</div>
-            <div class="hiw-ico">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <!-- ══ DASHBOARD ══════════════════════════════════════════════════ -->
+    <section class="section dashboard-section">
+      <div class="container">
+        <div class="dash-layout">
+          <div class="dash-text reveal">
+            <div class="tag">{{ t('dashboard.tag') }}</div>
+            <h2 class="sec-title" style="white-space:pre-line">{{ t('dashboard.title') }}</h2>
+            <p class="sec-sub">{{ t('dashboard.sub') }}</p>
+            <button class="btn-outline" @click="goRegister">{{ t('dashboard.cta') }} →</button>
+          </div>
+          <div class="dash-card reveal">
+            <!-- Top metrics -->
+            <div class="dash-metrics">
+              <div class="metric">
+                <div class="metric-label">{{ t('dashboard.totalScans') }}</div>
+                <div class="metric-value">12,847</div>
+                <div class="metric-delta">↑ 23% {{ t('dashboard.thisWeek') }}</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">{{ t('dashboard.peakHour') }}</div>
+                <div class="metric-value">19:00–21:00</div>
+                <div class="metric-delta">{{ t('dashboard.peakHourMeta') }}</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">{{ t('dashboard.avgSession') }}</div>
+                <div class="metric-value">3:42</div>
+                <div class="metric-delta">{{ t('dashboard.avgSessionMeta') }}</div>
+              </div>
             </div>
+            <!-- Chart -->
+            <div class="dash-chart-wrap">
+              <div class="dash-chart-bars">
+                <div class="db" style="--h:40%"></div>
+                <div class="db" style="--h:55%"></div>
+                <div class="db" style="--h:35%"></div>
+                <div class="db" style="--h:70%"></div>
+                <div class="db" style="--h:62%"></div>
+                <div class="db" style="--h:88%"></div>
+                <div class="db peak" style="--h:100%"></div>
+                <div class="db" style="--h:76%"></div>
+                <div class="db" style="--h:58%"></div>
+                <div class="db" style="--h:44%"></div>
+                <div class="db" style="--h:65%"></div>
+                <div class="db" style="--h:52%"></div>
+              </div>
+              <div class="dash-chart-labels">
+                <span>{{ t('dashboard.day1') }}</span><span>{{ t('dashboard.day2') }}</span><span>{{ t('dashboard.day3') }}</span><span>{{ t('dashboard.day4') }}</span>
+                <span>{{ t('dashboard.day5') }}</span><span>{{ t('dashboard.day6') }}</span><span>{{ t('dashboard.day7') }}</span>
+              </div>
+            </div>
+            <!-- Top dishes -->
+            <div class="dash-dishes">
+              <div class="dd-title">{{ t('dashboard.topDishes') }}</div>
+              <div class="dd-item">
+                <span class="dd-rank">01</span>
+                <span class="dd-name">{{ t('dashboard.dish1') }}</span>
+                <div class="dd-bar-wrap"><div class="dd-bar" style="width:92%"></div></div>
+                <span class="dd-views">1,284 {{ t('dashboard.views') }}</span>
+              </div>
+              <div class="dd-item">
+                <span class="dd-rank">02</span>
+                <span class="dd-name">{{ t('dashboard.dish2') }}</span>
+                <div class="dd-bar-wrap"><div class="dd-bar" style="width:74%"></div></div>
+                <span class="dd-views">978 {{ t('dashboard.views') }}</span>
+              </div>
+              <div class="dd-item">
+                <span class="dd-rank">03</span>
+                <span class="dd-name">{{ t('dashboard.dish3') }}</span>
+                <div class="dd-bar-wrap"><div class="dd-bar" style="width:61%"></div></div>
+                <span class="dd-views">812 {{ t('dashboard.views') }}</span>
+              </div>
+              <div class="dd-item">
+                <span class="dd-rank">04</span>
+                <span class="dd-name">{{ t('dashboard.dish4') }}</span>
+                <div class="dd-bar-wrap"><div class="dd-bar" style="width:48%"></div></div>
+                <span class="dd-views">634 {{ t('dashboard.views') }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ QR EXPERIENCE ══════════════════════════════════════════════ -->
+    <section class="section qr-section">
+      <div class="container">
+        <div class="qr-layout">
+          <div class="qr-visual reveal">
+            <div class="qr-card">
+              <div class="qr-table-label">{{ t('qrExperience.tableLabel') }}</div>
+              <svg class="qr-code-svg" width="120" height="120" viewBox="0 0 80 80" fill="none">
+                <rect x="4" y="4" width="28" height="28" rx="3" stroke="#3b5bdb" stroke-width="4"/>
+                <rect x="12" y="12" width="12" height="12" fill="#3b5bdb"/>
+                <rect x="48" y="4" width="28" height="28" rx="3" stroke="#3b5bdb" stroke-width="4"/>
+                <rect x="56" y="12" width="12" height="12" fill="#3b5bdb"/>
+                <rect x="4" y="48" width="28" height="28" rx="3" stroke="#3b5bdb" stroke-width="4"/>
+                <rect x="12" y="56" width="12" height="12" fill="#3b5bdb"/>
+                <rect x="48" y="52" width="6" height="6" fill="#3b5bdb"/>
+                <rect x="58" y="48" width="6" height="6" fill="#3b5bdb"/>
+                <rect x="66" y="56" width="6" height="6" fill="#3b5bdb"/>
+                <rect x="48" y="62" width="6" height="6" fill="#3b5bdb"/>
+                <rect x="58" y="68" width="14" height="6" fill="#3b5bdb"/>
+              </svg>
+              <div class="qr-brand">La Bella Cucina</div>
+              <div class="qr-hint">{{ t('qrExperience.qrHint') }}</div>
+            </div>
+            <div class="qr-scan-line"></div>
+          </div>
+          <div class="qr-text reveal">
+            <div class="tag">{{ t('qrExperience.tag') }}</div>
+            <h2 class="sec-title">{{ t('qrExperience.title') }}</h2>
+            <p class="sec-sub">{{ t('qrExperience.sub') }}</p>
+            <ul class="check-list">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('qrExperience.point1') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('qrExperience.point2') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('qrExperience.point3') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('qrExperience.point4') }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ MULTI-BUSINESS ═════════════════════════════════════════════ -->
+    <section class="section multi-section">
+      <div class="container">
+        <div class="multi-layout">
+          <div class="multi-text reveal">
+            <div class="tag">{{ t('multiBusiness.tag') }}</div>
+            <h2 class="sec-title" style="white-space:pre-line">{{ t('multiBusiness.title') }}</h2>
+            <p class="sec-sub">{{ t('multiBusiness.sub') }}</p>
+            <ul class="check-list">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('multiBusiness.point1') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('multiBusiness.point2') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('multiBusiness.point3') }}
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ t('multiBusiness.point4') }}
+              </li>
+            </ul>
+          </div>
+          <div class="multi-cards reveal">
+            <div class="biz-card active">
+              <div class="biz-dot active"></div>
+              <div class="biz-info">
+                <div class="biz-name">{{ t('multiBusiness.loc1') }}</div>
+                <div class="biz-meta">3 {{ t('multiBusiness.menusLabel') }}</div>
+              </div>
+              <div class="biz-status">{{ t('multiBusiness.activeLabel') }}</div>
+            </div>
+            <div class="biz-card">
+              <div class="biz-dot active"></div>
+              <div class="biz-info">
+                <div class="biz-name">{{ t('multiBusiness.loc2') }}</div>
+                <div class="biz-meta">2 {{ t('multiBusiness.menusLabel') }}</div>
+              </div>
+              <div class="biz-status">{{ t('multiBusiness.activeLabel') }}</div>
+            </div>
+            <div class="biz-card">
+              <div class="biz-dot active"></div>
+              <div class="biz-info">
+                <div class="biz-name">{{ t('multiBusiness.loc3') }}</div>
+                <div class="biz-meta">4 {{ t('multiBusiness.menusLabel') }}</div>
+              </div>
+              <div class="biz-status">{{ t('multiBusiness.activeLabel') }}</div>
+            </div>
+            <div class="biz-card add-card" @click="goRegister">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              {{ t('multiBusiness.addNew') }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ ANALYTICS ══════════════════════════════════════════════════ -->
+    <section id="analytics" class="section">
+      <div class="container">
+        <div class="sec-header reveal">
+          <div class="tag">{{ t('analytics.tag') }}</div>
+          <h2 class="sec-title" style="white-space:pre-line">{{ t('analytics.title') }}</h2>
+          <p class="sec-sub">{{ t('analytics.sub') }}</p>
+        </div>
+        <div class="analytics-grid">
+          <div class="an-card reveal">
+            <div class="an-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+            </div>
+            <h3>{{ t('analytics.card1Title') }}</h3>
+            <p>{{ t('analytics.card1Desc') }}</p>
+          </div>
+          <div class="an-card reveal">
+            <div class="an-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h3>{{ t('analytics.card2Title') }}</h3>
+            <p>{{ t('analytics.card2Desc') }}</p>
+          </div>
+          <div class="an-card reveal">
+            <div class="an-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3>{{ t('analytics.card3Title') }}</h3>
+            <p>{{ t('analytics.card3Desc') }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ HOW IT WORKS ════════════════════════════════════════════════ -->
+    <section id="how" class="section how-section">
+      <div class="container">
+        <div class="sec-header reveal">
+          <div class="tag">{{ t('how.tag') }}</div>
+          <h2 class="sec-title">{{ t('how.title') }}</h2>
+          <p class="sec-sub">{{ t('how.sub') }}</p>
+        </div>
+        <div class="how-steps">
+          <div class="how-step reveal">
+            <div class="step-num">01</div>
             <h3>{{ t('how.step1Title') }}</h3>
             <p>{{ t('how.step1Desc') }}</p>
           </div>
-          <div class="hiw-line reveal"></div>
-          <div class="hiw-step reveal">
-            <div class="hiw-num">02</div>
-            <div class="hiw-ico">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            </div>
+          <div class="how-arrow">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="how-step reveal">
+            <div class="step-num">02</div>
             <h3>{{ t('how.step2Title') }}</h3>
             <p>{{ t('how.step2Desc') }}</p>
           </div>
-          <div class="hiw-line reveal"></div>
-          <div class="hiw-step reveal">
-            <div class="hiw-num">03</div>
-            <div class="hiw-ico">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M17 17v3M20 17v3M17 20h3"/></svg>
-            </div>
+          <div class="how-arrow">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="how-step reveal">
+            <div class="step-num">03</div>
             <h3>{{ t('how.step3Title') }}</h3>
             <p>{{ t('how.step3Desc') }}</p>
           </div>
@@ -459,233 +735,129 @@ const submitContact = () => {
       </div>
     </section>
 
-    <!-- ══ TESTIMONIALS ═══════════════════════════════════════════ -->
-    <section class="section testi-section">
-      <div class="sec-wrap">
-        <div class="sec-tag reveal">{{ t('testimonials.tag') }}</div>
-        <h2 class="sec-title reveal">{{ t('testimonials.title') }}</h2>
-        <div class="testi-grid">
-          <div class="testi-card reveal">
-            <div class="testi-stars">★★★★★</div>
-            <p>{{ t('testimonials.t1Quote') }}</p>
-            <div class="testi-who">
-              <div class="testi-av" style="background:#768dfb20;color:#768dfb">MA</div>
-              <div>
-                <strong>Marco Andreotti</strong>
-                <span>Bella Roma · Milano</span>
-              </div>
-            </div>
-          </div>
-          <div class="testi-card reveal">
-            <div class="testi-stars">★★★★★</div>
-            <p>{{ t('testimonials.t2Quote') }}</p>
-            <div class="testi-who">
-              <div class="testi-av" style="background:#f0f0f0;color:#555">SR</div>
-              <div>
-                <strong>Sofia Ramirez</strong>
-                <span>El Patio · Barcelona</span>
-              </div>
-            </div>
-          </div>
-          <div class="testi-card reveal">
-            <div class="testi-stars">★★★★★</div>
-            <p>{{ t('testimonials.t3Quote') }}</p>
-            <div class="testi-who">
-              <div class="testi-av" style="background:#19151810;color:#191518">KT</div>
-              <div>
-                <strong>Kenji Takahashi</strong>
-                <span>Brewed Horizons · Tokyo</span>
-              </div>
-            </div>
-          </div>
+    <!-- ══ PRICING ════════════════════════════════════════════════════ -->
+    <section id="pricing" class="section pricing-section">
+      <div class="container">
+        <div class="sec-header reveal">
+          <div class="tag">{{ t('pricing.tag') }}</div>
+          <h2 class="sec-title">{{ t('pricing.title') }}</h2>
+          <p class="sec-sub">{{ t('pricing.sub') }}</p>
         </div>
-      </div>
-    </section>
-
-    <!-- ══ PRICING ════════════════════════════════════════════════ -->
-    <section class="section price-section" id="pricing">
-      <div class="sec-wrap">
-        <div class="sec-tag reveal">{{ t('pricing.tag') }}</div>
-        <h2 class="sec-title reveal">{{ t('pricing.title') }}</h2>
-        <p class="sec-sub reveal">{{ t('pricing.sub') }}</p>
-        <div class="price-grid">
+        <div class="pricing-grid">
           <div class="price-card reveal">
-            <div class="pc-name">{{ t('pricing.free.name') }}</div>
-            <div class="pc-price">$0<span>{{ t('pricing.perMonth') }}</span></div>
-            <p class="pc-desc">{{ t('pricing.free.desc') }}</p>
-            <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f1') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f2') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f3') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f4') }}</li>
-              <li class="off"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>{{ t('pricing.free.f5') }}</li>
-              <li class="off"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>{{ t('pricing.free.f6') }}</li>
+            <div class="plan-name">{{ t('pricing.free.name') }}</div>
+            <div class="plan-price"><strong>{{ t('pricing.free.price') }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-desc">{{ t('pricing.free.desc') }}</div>
+            <ul class="plan-feats">
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f1') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f2') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f3') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f4') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f5') }}</li>
             </ul>
-            <button class="pc-btn-out" @click="goRegister">{{ t('pricing.free.cta') }}</button>
+            <button class="plan-btn" @click="goRegister">{{ t('pricing.free.cta') }}</button>
           </div>
-
           <div class="price-card featured reveal">
-            <div class="pc-badge">{{ t('pricing.mostPopular') }}</div>
-            <div class="pc-name">{{ t('pricing.pro.name') }}</div>
-            <div class="pc-price">$10<span>{{ t('pricing.perMonth') }}</span></div>
-            <p class="pc-desc">{{ t('pricing.pro.desc') }}</p>
-            <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f1') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f2') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f3') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f4') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f5') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#768dfb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f6') }}</li>
+            <div class="plan-badge">{{ t('pricing.mostPopular') }}</div>
+            <div class="plan-name">{{ t('pricing.pro.name') }}</div>
+            <div class="plan-price"><strong>{{ t('pricing.pro.price') }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-desc">{{ t('pricing.pro.desc') }}</div>
+            <ul class="plan-feats">
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f1') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f2') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f3') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f4') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f5') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f6') }}</li>
             </ul>
-            <button class="pc-btn-fill" @click="goRegister">{{ t('pricing.pro.cta') }}</button>
+            <button class="plan-btn gold" @click="goRegister">{{ t('pricing.pro.cta') }}</button>
           </div>
-
           <div class="price-card reveal">
-            <div class="pc-name">{{ t('pricing.premium.name') }}</div>
-            <div class="pc-price">$25<span>{{ t('pricing.perMonth') }}</span></div>
-            <p class="pc-desc">{{ t('pricing.premium.desc') }}</p>
-            <ul class="pc-list">
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f1') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f2') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f3') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f4') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f5') }}</li>
-              <li class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f6') }}</li>
+            <div class="plan-name">{{ t('pricing.premium.name') }}</div>
+            <div class="plan-price"><strong>{{ t('pricing.premium.price') }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-desc">{{ t('pricing.premium.desc') }}</div>
+            <ul class="plan-feats">
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f1') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f2') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f3') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f4') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f5') }}</li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f6') }}</li>
             </ul>
-            <button class="pc-btn-out" @click="goRegister">{{ t('pricing.premium.cta') }}</button>
+            <button class="plan-btn" @click="goRegister">{{ t('pricing.premium.cta') }}</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ FAQ ════════════════════════════════════════════════════ -->
-    <section class="section faq-section" id="faq">
-      <div class="sec-wrap faq-wrap">
-        <div class="faq-left">
-          <div class="sec-tag reveal">{{ t('faq.tag') }}</div>
-          <h2 class="sec-title reveal" style="text-align:start">{{ t('faq.title') }}</h2>
-          <p class="sec-sub reveal" style="text-align:start;margin-left:0;margin-right:0">{{ t('faq.sub') }}</p>
+    <!-- ══ FAQ ════════════════════════════════════════════════════════ -->
+    <section id="faq" class="section faq-section">
+      <div class="container faq-inner">
+        <div class="sec-header reveal">
+          <div class="tag">{{ t('faq.tag') }}</div>
+          <h2 class="sec-title">{{ t('faq.title') }}</h2>
         </div>
-        <div class="faq-right reveal">
+        <div class="faq-list">
           <div
             v-for="(item, i) in faqItems"
             :key="i"
-            class="faq-item"
-            :class="{ open: faqOpen[i] }"
+            :class="['faq-item', { open: faqOpen[i] }]"
             @click="toggleFaq(i)"
           >
             <div class="faq-q">
               {{ item.q }}
-              <svg :class="['faq-arr', { rot: faqOpen[i] }]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg :class="['faq-arrow', { open: faqOpen[i] }]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <transition name="faq">
-              <div v-if="faqOpen[i]" class="faq-a">{{ item.a }}</div>
-            </transition>
+            <div class="faq-a" v-show="faqOpen[i]">{{ item.a }}</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ FINAL CTA ══════════════════════════════════════════════ -->
-    <section class="section cta-section">
-      <div class="sec-wrap">
+    <!-- ══ CTA ════════════════════════════════════════════════════════ -->
+    <section class="cta-section">
+      <div class="container">
         <div class="cta-card reveal">
-          <div class="cta-glow-l"></div>
-          <div class="cta-glow-r"></div>
-          <h2 class="cta-h2">{{ t('cta.title') }}</h2>
-          <p class="cta-p">{{ t('cta.sub') }}</p>
-          <button class="cta-main" @click="goRegister" style="font-size:17px;padding:16px 36px">
-            {{ t('cta.btn') }}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-          <p class="cta-note">{{ t('cta.note') }}</p>
+          <div class="cta-glow"></div>
+          <h2 class="cta-title">{{ t('cta.title') }}</h2>
+          <p class="cta-sub">{{ t('cta.sub') }}</p>
+          <button class="btn-cta-main" @click="goRegister">{{ t('cta.btn') }}</button>
+          <div class="cta-note">{{ t('cta.note') }}</div>
         </div>
       </div>
     </section>
 
-    <!-- ══ CONTACT ══════════════════════════════════════════════════ -->
-    <section class="section contact-section" id="contact">
-      <div class="sec-wrap">
-        <div class="contact-inner reveal">
-          <div class="contact-left">
-            <span class="sec-tag" style="color:#768dfb">{{ t('contact.tag') }}</span>
-            <h2 class="contact-h2">{{ t('contact.title') }}</h2>
-            <p class="contact-sub">{{ t('contact.sub') }}</p>
-            <div class="contact-info">
-              <div class="ci-item">
-                <span class="ci-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                </span>
-                <span>destek@menusflow.com</span>
-              </div>
-              <div class="ci-item">
-                <span class="ci-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                </span>
-                <span>+90 (212) 000 00 00</span>
-              </div>
-            </div>
-          </div>
-
-          <form class="contact-form" @submit.prevent="submitContact">
-            <div class="cf-group">
-              <label class="cf-label">{{ t('contact.nameLabel') }}</label>
-              <input v-model="contactForm.name" type="text" class="cf-input" :placeholder="t('contact.namePlaceholder')" />
-            </div>
-            <div class="cf-group">
-              <label class="cf-label">{{ t('contact.emailLabel') }}</label>
-              <input v-model="contactForm.email" type="email" class="cf-input" :placeholder="t('contact.emailPlaceholder')" />
-            </div>
-            <div class="cf-group">
-              <label class="cf-label">{{ t('contact.messageLabel') }}</label>
-              <textarea v-model="contactForm.message" class="cf-textarea" :placeholder="t('contact.messagePlaceholder')" rows="4"></textarea>
-            </div>
-            <button type="submit" class="cf-submit" :class="{ sent: contactSent }">
-              <template v-if="!contactSent">
-                {{ t('contact.send') }}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-              </template>
-              <template v-else>
-                {{ t('contact.sent') }}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </template>
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══ FOOTER ══════════════════════════════════════════════════ -->
-    <footer class="land-footer">
-      <div class="ft-wrap">
-        <div class="ft-brand">
-          <a href="#" class="brand" style="text-decoration:none">
-            <span class="brand-icon"><span class="bi-q">Q</span></span>
-            <span class="brand-name" style="color:#fff">Menusflow</span>
+    <!-- ══ FOOTER ══════════════════════════════════════════════════════ -->
+    <footer class="footer">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <a href="#" class="brand">
+            <span class="brand-mark">M</span>
+            <span class="brand-name">MenusFlow</span>
           </a>
-          <p>{{ t('footer.tagline') }}</p>
+          <p class="footer-tagline">{{ t('footer.tagline') }}</p>
         </div>
-        <div class="ft-links">
-          <div class="ft-col">
-            <h4>{{ t('footer.product') }}</h4>
+        <div class="footer-cols">
+          <div class="footer-col">
+            <div class="footer-heading">{{ t('footer.product') }}</div>
             <a href="#features">{{ t('footer.features') }}</a>
             <a href="#pricing">{{ t('footer.pricing') }}</a>
             <a href="#how">{{ t('footer.howItWorks') }}</a>
           </div>
-          <div class="ft-col">
-            <h4>{{ t('footer.company') }}</h4>
+          <div class="footer-col">
+            <div class="footer-heading">{{ t('footer.company') }}</div>
             <a href="#">{{ t('footer.about') }}</a>
             <a href="#">{{ t('footer.blog') }}</a>
-            <a href="#">{{ t('footer.contact') }}</a>
+            <a href="#contact">{{ t('footer.contact') }}</a>
           </div>
-          <div class="ft-col">
-            <h4>{{ t('footer.legal') }}</h4>
+          <div class="footer-col">
+            <div class="footer-heading">{{ t('footer.legal') }}</div>
             <a href="#">{{ t('footer.privacy') }}</a>
             <a href="#">{{ t('footer.terms') }}</a>
           </div>
         </div>
       </div>
-      <div class="ft-bottom">
+      <div class="footer-bottom">
         <span>{{ t('footer.copyright') }}</span>
         <span>{{ t('footer.madeWith') }}</span>
       </div>
@@ -695,933 +867,1539 @@ const submitContact = () => {
 </template>
 
 <style scoped>
-/* ═══════════════════════════════════════════════════════
-   TOKENS
-════════════════════════════════════════════════════════ */
+/* ── TOKENS ────────────────────────────────────────────────────────── */
 .land {
-  --brand:      #768dfb;
-  --brand-d:    #5b73e8;
-  --brand-glow: rgba(118,141,251,0.18);
-  --dark:       #0d0d18;
-  --text:       #111120;
-  --text-mid:   #50506a;
-  --text-soft:  #8888a8;
-  --bg:         #ffffff;
-  --bg-soft:    #f6f7fd;
-  --border:     #e8eaf4;
-  --card:       #ffffff;
-  --r:          18px;
-
-  font-family: 'Poppins', system-ui, sans-serif;
-  color: var(--text);
+  --bg:        #f8f9ff;
+  --sur:       #ffffff;
+  --sur2:      #eef0fb;
+  --border:    rgba(59,91,219,0.10);
+  --border2:   rgba(59,91,219,0.20);
+  --t1:        #0d1b3e;
+  --t2:        rgba(13,27,62,0.55);
+  --t3:        rgba(13,27,62,0.32);
+  --gold:      #3b5bdb;
+  --gold-dim:  rgba(59,91,219,0.10);
+  --gold-glow: rgba(59,91,219,0.06);
+  --radius:    14px;
+  --f-display: 'Geist', system-ui, sans-serif;
+  --f-body:    'Inter', system-ui, sans-serif;
+  --f-mono:    'IBM Plex Mono', 'Fira Code', monospace;
   background: var(--bg);
+  color: var(--t1);
+  font-family: var(--f-body);
   overflow-x: hidden;
-  line-height: 1.6;
 }
 
-/* ═══════════════════════════════════════════════════════
-   REVEAL
-════════════════════════════════════════════════════════ */
+/* ── LAYOUT ────────────────────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 60px);
+}
+
+.section {
+  padding: clamp(80px, 10vw, 140px) 0;
+}
+
+/* ── REVEAL ANIMATION ──────────────────────────────────────────────── */
 .reveal {
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1);
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(.22,.68,0,1.2), transform 0.7s cubic-bezier(.22,.68,0,1.2);
 }
-.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
 
-/* ═══════════════════════════════════════════════════════
-   SHARED SECTION
-════════════════════════════════════════════════════════ */
-.section { padding: 96px 24px; }
-.sec-wrap { max-width: 1120px; margin: 0 auto; }
-.sec-tag {
-  display: inline-block;
-  font-family: 'Poppins', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--brand);
-  background: rgba(118,141,251,.1);
-  border: 1px solid rgba(118,141,251,.2);
-  padding: 5px 14px;
-  border-radius: 999px;
-  margin-bottom: 18px;
+/* ── TYPOGRAPHY ────────────────────────────────────────────────────── */
+.sec-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto clamp(48px, 6vw, 80px);
 }
 .sec-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--f-display);
+  font-size: clamp(34px, 4.5vw, 58px);
   font-weight: 800;
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  line-height: 1.15;
-  color: var(--text);
-  margin: 0 0 16px;
-  text-align: center;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 12px 0 16px;
+  color: var(--t1);
 }
 .sec-sub {
-  font-size: 17px;
-  color: var(--text-mid);
-  max-width: 540px;
-  margin: 0 auto 52px;
-  text-align: center;
+  font-size: clamp(15px, 1.5vw, 17px);
+  color: var(--t2);
   line-height: 1.7;
+  max-width: 580px;
+  margin: 0 auto;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(59,91,219,0.25);
+  border-radius: 100px;
+  padding: 5px 12px;
 }
 
-/* ═══════════════════════════════════════════════════════
-   NAV
-════════════════════════════════════════════════════════ */
-.nav {
+/* ── BUTTONS ───────────────────────────────────────────────────────── */
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--t2);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: color .2s;
+}
+.btn-ghost:hover { color: var(--t1); }
+.btn-gold {
+  background: var(--gold);
+  color: #ffffff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 9px 20px;
+  border-radius: 100px;
+  transition: opacity .2s, transform .2s;
+}
+.btn-gold:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-outline {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--t1);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 11px 22px;
+  border-radius: 100px;
+  transition: border-color .2s, background .2s;
+  margin-top: 28px;
+}
+.btn-outline:hover { border-color: var(--gold); background: var(--gold-glow); }
+
+/* ── NAV ───────────────────────────────────────────────────────────── */
+.nav-wrap {
   position: fixed;
-  inset: 0 0 auto;
-  z-index: 200;
-  padding: 0 24px;
-  transition: background .25s, box-shadow .25s, backdrop-filter .25s;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 14px clamp(16px, 3vw, 40px) 0;
+  pointer-events: none;
+}
+.nav-wrap > * { pointer-events: auto; }
+.nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid rgba(59,91,219,0.12);
+  border-radius: 14px;
+  box-shadow: 0 2px 24px rgba(59,91,219,0.08), 0 1px 0 rgba(255,255,255,0.9) inset;
+  transition: box-shadow .3s;
+  overflow: visible;
 }
 .nav.scrolled {
-  background: rgba(255,255,255,.88);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 var(--border);
+  box-shadow: 0 4px 40px rgba(59,91,219,0.12), 0 1px 0 rgba(255,255,255,0.9) inset;
 }
-.nav-wrap {
-  max-width: 1120px;
-  margin: 0 auto;
-  height: 68px;
+.nav-inner {
+  padding: 10px 18px;
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 0;
 }
-.brand { display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0; }
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+  margin-right: 28px;
+}
 .brand-icon {
-  width: 34px; height: 34px;
-  background: linear-gradient(145deg, #8a9efc 0%, #6478f0 100%);
-  border-radius: 10px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  box-shadow: 0 4px 12px var(--brand-glow);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-.bi-q {
-  font-family: 'Waldenburg', 'Waldenburg Fallback', 'Bricolage Grotesque', sans-serif;
-  font-weight: 800;
-  font-size: 16px;
+.brand-text {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.03em;
   line-height: 1;
-  color: #fff;
-  letter-spacing: -0.02em;
 }
-.brand-name {
-  font-family: 'Waldenburg', 'Waldenburg Fallback', 'Bricolage Grotesque', sans-serif;
-  font-weight: 800;
-  font-size: 19px;
-  color: var(--text);
-  letter-spacing: -.02em;
-}
+.brand-gold { color: var(--gold); }
+.brand-white { color: var(--t1); }
+
+/* Nav links */
 .nav-links {
   display: flex;
   align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+.nav-link-wrap { position: relative; }
+.nav-link {
+  display: flex;
+  align-items: center;
   gap: 4px;
-  margin-inline-start: auto;
-}
-.nav-links a {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-mid);
   text-decoration: none;
-  padding: 7px 14px;
-  border-radius: 10px;
-  transition: color .15s, background .15s;
+  color: rgba(13,27,62,0.55);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: 9px;
+  transition: color .18s, background .18s;
+  white-space: nowrap;
 }
-.nav-links a:hover { color: var(--text); background: var(--bg-soft); }
-.nav-ctas { display:flex; align-items:center; gap:8px; }
-.btn-ghost {
-  font-family:'Poppins',sans-serif;
-  font-size: 14px; font-weight: 600;
-  color: var(--text-mid);
-  background: transparent; border: none;
-  padding: 8px 16px; border-radius: 10px;
-  cursor: pointer; transition: color .15s, background .15s;
-}
-.btn-ghost:hover { color:var(--text); background:var(--bg-soft); }
-.btn-pill {
-  font-family:'Poppins',sans-serif;
-  font-size: 14px; font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-d) 100%);
-  border: none; padding: 9px 20px; border-radius: 10px;
-  cursor: pointer;
-  box-shadow: 0 2px 10px var(--brand-glow);
-  transition: opacity .15s, transform .1s, box-shadow .15s;
-}
-.btn-pill:hover { opacity:.9; transform:translateY(-1px); box-shadow: 0 5px 18px var(--brand-glow); }
-.hamburger {
-  display:none; flex-direction:column; gap:5px;
-  background:none; border:none; cursor:pointer; padding:6px; margin-inline-start:auto;
-}
-.hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:transform .22s, opacity .22s; }
-.mobile-drawer {
-  display:none; flex-direction:column; gap:2px;
-  padding: 10px 0 20px;
-  border-top: 1px solid var(--border);
-  background: rgba(255,255,255,.96);
-  backdrop-filter: blur(16px);
-}
-.mobile-drawer.open { display:flex; }
-.mobile-drawer a { font-size:15px; font-weight:500; color:var(--text-mid); text-decoration:none; padding:10px 16px; border-radius:8px; }
-.mobile-drawer a:hover { color:var(--text); background:var(--bg-soft); }
-.drawer-foot { display:flex; flex-direction:column; gap:8px; padding: 12px 0 0; border-top:1px solid var(--border); margin-top:8px; }
-.w100 { width:100%; text-align:center; justify-content:center; }
+.nav-link:hover { color: var(--t1); background: rgba(59,91,219,0.06); }
+.nav-link svg { opacity: 0.5; flex-shrink: 0; }
 
-/* Mobile language switcher */
-.mobile-lang {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px;
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-}
-.ml-btn {
-  font-family: 'Poppins', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: var(--text-mid);
-  cursor: pointer;
-  transition: all .15s;
-  letter-spacing: .05em;
-}
-.ml-btn.active {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-}
-
-/* Language Switcher Dropdown */
-.lang-switcher { position: relative; }
-.lang-btn {
+/* Right actions */
+.nav-actions {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-mid);
-  background: transparent;
-  border: 1.5px solid var(--border);
-  padding: 7px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: color .15s, background .15s, border-color .15s;
-  letter-spacing: .04em;
+  gap: 4px;
+  margin-left: auto;
 }
-.lang-btn:hover { color: var(--text); background: var(--bg-soft); border-color: #c4c8f0; }
-.lang-arrow {
-  transition: transform .2s;
-  color: var(--text-soft);
-}
-.lang-arrow.open { transform: rotate(180deg); }
-
-.lang-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  inset-inline-end: 0;
-  background: #fff;
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0,0,0,.1);
-  overflow: hidden;
-  min-width: 150px;
-  z-index: 300;
-}
-.lang-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 16px;
+.nav-icon-btn {
+  width: 34px;
+  height: 34px;
   background: none;
   border: none;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
-  font-size: 14px;
-  color: var(--text-mid);
-  transition: background .12s, color .12s;
-  text-align: start;
+  color: rgba(13,27,62,0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: color .18s, background .18s;
 }
-.lang-option:hover { background: var(--bg-soft); color: var(--text); }
-.lang-option.active { color: var(--brand); background: rgba(118,141,251,.06); }
-.lo-code { font-weight: 700; font-size: 12px; letter-spacing: .06em; width: 28px; }
-.lo-name { font-size: 13px; }
-
-/* Dropdown transition */
-.lang-drop-enter-active,
-.lang-drop-leave-active { transition: opacity .18s, transform .18s; }
-.lang-drop-enter-from,
-.lang-drop-leave-to { opacity: 0; transform: translateY(-6px); }
-
-@media(max-width:768px){
-  .nav-links,.nav-ctas{display:none}
-  .hamburger{display:flex}
+.nav-icon-btn:hover { color: var(--t1); background: rgba(59,91,219,0.06); }
+.nav-login {
+  background: none;
+  border: none;
+  color: rgba(13,27,62,0.55);
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 7px 14px;
+  border-radius: 9px;
+  transition: color .18s, background .18s;
 }
+.nav-login:hover { color: var(--t1); background: rgba(59,91,219,0.06); }
+.nav-cta {
+  background: var(--gold);
+  color: #ffffff;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 8px 18px;
+  border-radius: 100px;
+  letter-spacing: -0.01em;
+  transition: opacity .18s, transform .18s;
+}
+.nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
 
-/* ═══════════════════════════════════════════════════════
-   HERO
-════════════════════════════════════════════════════════ */
+/* Lang switcher */
+.lang-switcher { position: relative; }
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid rgba(59,91,219,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 144px;
+  box-shadow: 0 20px 48px rgba(59,91,219,0.12);
+}
+.lang-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  color: rgba(13,27,62,0.55);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 10px 16px;
+  transition: background .15s, color .15s;
+}
+.lang-opt:hover { background: rgba(59,91,219,0.06); color: var(--t1); }
+.lang-opt.active { color: var(--gold); }
+.lang-name { color: rgba(13,27,62,0.32); font-size: 11px; }
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+}
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  background: var(--t1);
+  border-radius: 2px;
+  transition: transform .25s, opacity .25s;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* Mobile drawer */
+.mobile-drawer {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  padding: 14px 20px 18px;
+  background: #ffffff;
+  border: 1px solid rgba(59,91,219,0.12);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(59,91,219,0.10);
+}
+.mobile-drawer a {
+  text-decoration: none;
+  color: rgba(13,27,62,0.55);
+  font-size: 15px;
+  padding: 11px 8px;
+  border-bottom: 1px solid rgba(59,91,219,0.07);
+}
+.mob-lang {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+}
+.ml-btn {
+  background: none;
+  border: 1px solid rgba(59,91,219,0.15);
+  color: rgba(13,27,62,0.50);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 100px;
+  letter-spacing: 0.06em;
+  transition: border-color .2s, color .2s;
+}
+.ml-btn.active { border-color: var(--gold); color: var(--gold); }
+.mob-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+.w-full { width: 100%; text-align: center; justify-content: center; }
+
+/* ── HERO ──────────────────────────────────────────────────────────── */
 .hero {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding: 120px 24px 80px;
-  position: relative;
+  padding: 130px 0 80px;
   overflow: hidden;
-  background: var(--bg);
 }
-.hero-dots {
+.hero-glow {
   position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, #c7cdf9 1px, transparent 1px);
-  background-size: 32px 32px;
-  opacity: .45;
-}
-.hero-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 600px;
+  background: radial-gradient(ellipse, rgba(59,91,219,0.07) 0%, transparent 70%);
   pointer-events: none;
 }
-.b1 {
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(118,141,251,.22) 0%, transparent 70%);
-  top: -80px; right: -60px;
-}
-.b2 {
-  width: 360px; height: 360px;
-  background: radial-gradient(circle, rgba(168,139,250,.14) 0%, transparent 70%);
-  bottom: 40px; left: -80px;
-}
-.hero-wrap {
-  max-width: 1120px;
-  margin: 0 auto;
+.hero-inner {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 72px;
   align-items: center;
-  position: relative;
-  z-index: 1;
+  gap: clamp(40px, 6vw, 80px);
   width: 100%;
 }
-.hero-left { display:flex; flex-direction:column; gap:28px; }
-.hero-badge {
+.hero-text { flex: 1; }
+.eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(118,141,251,.08);
-  border: 1px solid rgba(118,141,251,.2);
-  color: var(--brand-d);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--t2);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
   padding: 7px 16px;
-  border-radius: 999px;
-  width: fit-content;
-  animation: fadeUp .6s ease both;
+  margin-bottom: 28px;
 }
-.pulse-dot {
-  width: 8px; height: 8px;
-  background: #16a34a;
+.pulse {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(22,163,74,.2);
-  animation: pulseGreen 2s infinite;
+  background: var(--gold);
+  box-shadow: 0 0 0 0 rgba(59,91,219,0.4);
+  animation: pulse-ring 2s infinite;
+  flex-shrink: 0;
 }
-@keyframes pulseGreen { 0%,100%{box-shadow:0 0 0 3px rgba(22,163,74,.2)} 50%{box-shadow:0 0 0 6px rgba(22,163,74,.08)} }
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(59,91,219,0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(59,91,219,0); }
+  100% { box-shadow: 0 0 0 0 rgba(59,91,219,0); }
+}
 .hero-h1 {
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--f-display);
+  font-size: clamp(34px, 4vw, 54px);
   font-weight: 800;
-  font-size: clamp(2.4rem, 5.2vw, 3.6rem);
-  line-height: 1.1;
-  letter-spacing: -.03em;
-  color: var(--text);
-  margin: 0;
-  animation: fadeUp .6s .08s ease both;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--t1);
+  margin: 0 0 24px;
+  max-width: 540px;
 }
 .hero-h1 em {
   font-style: normal;
-  background: linear-gradient(135deg, var(--brand) 0%, #a78bfa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--gold);
 }
 .hero-sub {
-  font-size: 18px;
-  line-height: 1.7;
-  color: var(--text-mid);
-  margin: 0;
-  max-width: 480px;
-  animation: fadeUp .6s .16s ease both;
+  font-size: clamp(15px, 1.4vw, 17px);
+  color: var(--t2);
+  line-height: 1.75;
+  max-width: 500px;
+  margin: 0 0 36px;
 }
 .hero-btns {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  margin-bottom: 48px;
   flex-wrap: wrap;
-  animation: fadeUp .6s .24s ease both;
 }
-.cta-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-d) 100%);
-  color: #fff;
-  font-family: 'Poppins', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 14px 28px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 20px var(--brand-glow);
-  transition: transform .15s, box-shadow .15s, opacity .15s;
-  position: relative;
-  overflow: hidden;
-}
-.cta-main::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,.18) 50%, transparent 100%);
-  transform: translateX(-100%);
-  transition: transform .5s;
-}
-.cta-main:hover::after { transform: translateX(100%); }
-.cta-main:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(118,141,251,.35); }
-.cta-ghost {
-  display: inline-flex;
+.btn-hero-primary {
+  display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-mid);
-  font-size: 15px;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 13px 20px;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
-  transition: color .15s, border-color .15s, background .15s;
-  font-family: 'Poppins', sans-serif;
+  background: var(--gold);
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 14px 26px;
+  border-radius: 100px;
+  transition: opacity .2s, transform .2s;
 }
-.cta-ghost:hover { color:var(--text); border-color:#c4c8f0; background:var(--bg-soft); }
+.btn-hero-primary:hover { opacity: 0.88; transform: translateY(-2px); }
+.btn-hero-ghost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--t2);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 20px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  transition: color .2s, border-color .2s;
+}
+.btn-hero-ghost:hover { color: var(--t1); border-color: var(--border2); }
 .hero-stats {
   display: flex;
   align-items: center;
-  gap: 20px;
-  animation: fadeUp .6s .32s ease both;
-  padding-top: 4px;
+  gap: 24px;
 }
-.hs-item { display:flex; flex-direction:column; gap:2px; }
-.hs-item strong {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 800;
+.stat { line-height: 1.3; }
+.stat strong {
+  display: block;
+  font-family: var(--f-mono);
   font-size: 22px;
-  color: var(--text);
-  letter-spacing: -.02em;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -0.02em;
 }
-.hs-item span { font-size: 12px; color: var(--text-soft); font-weight: 500; }
-.hs-sep { width:1px; height:32px; background:var(--border); }
-@keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+.stat span { font-size: 12px; color: var(--t3); }
+.stat-div { width: 1px; height: 32px; background: var(--border); }
 
-/* ── Phone ─────────────────────────── */
-.hero-right {
+/* Phone mockup */
+.hero-phone {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-  animation: fadeUp .7s .2s ease both;
 }
 .phone-halo {
   position: absolute;
-  width: 340px; height: 340px;
-  background: radial-gradient(circle, rgba(118,141,251,.16) 0%, transparent 68%);
+  width: 340px;
+  height: 500px;
+  background: radial-gradient(ellipse, rgba(59,91,219,0.10) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
-  animation: haloBreath 4s ease-in-out infinite;
 }
-@keyframes haloBreath { 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.1);opacity:1} }
-.phone-card {
-  animation: phoneFloat 5s ease-in-out infinite;
+.phone {
   position: relative;
-  z-index: 1;
-  width: 258px;
-}
-@keyframes phoneFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-.phone-shell {
-  width: 258px; height: 530px;
-  background: #0a0912;
-  border-radius: 44px;
-  border: 6px solid rgba(255,255,255,.1);
+  width: 248px;
+  min-height: 520px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f6fb 100%);
+  border-radius: 42px;
+  border: 1px solid rgba(13,27,62,0.08);
   box-shadow:
-    0 40px 80px rgba(13,13,24,.4),
-    inset 0 1px 0 rgba(255,255,255,.07),
-    0 0 0 1px rgba(255,255,255,.04),
-    0 0 60px rgba(118,141,251,.12);
+    0 0 0 6px #eef0fb,
+    0 0 0 7px rgba(59,91,219,0.12),
+    0 30px 80px rgba(59,91,219,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  overflow: hidden;
+  padding: 12px 0 20px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
-.p-island {
-  width: 90px; height: 24px;
-  background: #0a0912;
-  border-radius: 0 0 16px 16px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
+.phone-screen { flex: 1; }
+.phone-island {
+  width: 100px;
+  height: 28px;
+  background: #1a1a1a;
+  border-radius: 20px;
+  margin: 4px auto 12px;
 }
-.p-screen {
+.phone-screen { padding: 0 14px; }
+.phone-bar {
+  width: 80px;
+  height: 4px;
+  background: rgba(13,27,62,0.18);
+  border-radius: 2px;
+  margin: 14px auto 0;
+}
+
+/* Phone — AI advisor */
+.ps-ai-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 4px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.ps-ai-logo {
+  width: 28px;
+  height: 28px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(59,91,219,0.20);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.ps-ai-meta { flex: 1; min-width: 0; }
+.ps-ai-title {
+  font-family: var(--f-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.01em;
+}
+.ps-ai-sub { font-size: 9px; color: var(--t3); margin-top: 1px; }
+.ps-ai-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74,222,128,0.5);
+  animation: pulse-ring 2s infinite;
+  flex-shrink: 0;
+}
+.ps-ai-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.ps-ai-stat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.ps-ai-stat-label {
+  font-size: 8px;
+  font-weight: 500;
+  color: var(--t3);
+  letter-spacing: 0.04em;
+}
+.ps-ai-stat-val {
+  font-family: var(--f-mono);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -0.02em;
+  margin-top: 3px;
+  line-height: 1;
+}
+.ps-ai-stat-delta {
+  font-size: 8px;
+  font-weight: 600;
+  color: #16a34a;
+  margin-top: 3px;
+}
+.ps-ai-insights {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ps-ai-card {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  background: var(--sur);
+  border: 1px solid var(--border);
+  border-left-width: 2.5px;
+  border-radius: 8px;
+  padding: 7px 9px;
+}
+.ps-ai-card.important { border-left-color: #ef4444; }
+.ps-ai-card.suggestion { border-left-color: var(--gold); }
+.ps-ai-card.info { border-left-color: #3b82f6; }
+.ps-ai-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.ps-ai-card.important .ps-ai-dot { background: #ef4444; }
+.ps-ai-card.suggestion .ps-ai-dot { background: var(--gold); }
+.ps-ai-card.info .ps-ai-dot { background: #3b82f6; }
+.ps-ai-card-body-wrap { flex: 1; min-width: 0; }
+.ps-ai-card-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.005em;
+}
+.ps-ai-card-body {
+  font-size: 8.5px;
+  color: var(--t2);
+  line-height: 1.45;
+  margin-top: 1px;
+}
+.ps-ai-chart {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.ps-ai-chart-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--t3);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.ps-ai-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 38px;
+}
+.ps-ai-chart-bar {
   flex: 1;
-  background: #fff;
-  margin: -2px 4px 4px;
-  border-radius: 4px 4px 30px 30px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  background: rgba(59,91,219,0.18);
+  border-radius: 2px 2px 0 0;
+  transition: background .2s;
 }
-.p-bar { width:80px; height:4px; background:rgba(255,255,255,.22); border-radius:2px; margin:5px auto 7px; }
-.pm-header { display:flex; align-items:center; gap:9px; padding:12px 14px 10px; border-bottom:1px solid #f2f2f7; }
-.pm-avi { width:36px; height:36px; background:#f0f0f9; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; }
-.pm-name { font-size:12px; font-weight:700; color:#111120; }
-.pm-loc  { font-size:9px; color:#aaa; margin-top:1px; }
-.pm-tabs { display:flex; gap:5px; padding:8px 14px; border-bottom:1px solid #f2f2f7; overflow-x:auto; }
-.pm-tab { font-size:9.5px; font-weight:600; padding:3px 10px; border-radius:999px; background:#f4f4f8; color:#888; white-space:nowrap; }
-.pm-tab.active { background:var(--brand); color:#fff; }
-.pm-list { flex:1; overflow:hidden; padding:6px 0; }
-.pm-item { display:flex; align-items:center; gap:9px; padding:7px 14px; }
-.pm-emoji { width:38px; height:38px; background:#f7f7fb; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-.pm-info { flex:1; min-width:0; }
-.pm-iname { font-size:11px; font-weight:700; color:#111120; }
-.pm-idesc { font-size:9px; color:#bbb; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.pm-iprice { font-size:11px; font-weight:700; color:var(--brand); margin-top:2px; }
-.pm-add { width:24px; height:24px; background:var(--brand); color:#fff; border:none; border-radius:7px; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; line-height:1; }
-.pm-qrbar { display:flex; align-items:center; gap:8px; padding:7px 14px; background:#f7f8fd; border-top:1px solid #f2f2f7; font-size:9px; font-weight:600; color:#999; }
-.fb {
+.ps-ai-chart-bar.peak {
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(59,91,219,0.25);
+}
+.ps-ai-cta {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--gold);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 9px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+/* Floating chips */
+.chip {
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 7px;
-  background: #fff;
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 20px rgba(0,0,0,.08);
-  padding: 9px 16px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
+  gap: 6px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--t1);
+  backdrop-filter: blur(10px);
   white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(59,91,219,0.12);
 }
-.fb-top { top: 42px;  right: -88px; animation: fbFloat 4s ease-in-out infinite; }
-.fb-bot { bottom: 90px; left: -88px; animation: fbFloat 4s 2s ease-in-out infinite; }
-@keyframes fbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-@media(max-width:920px){
-  .hero-wrap{grid-template-columns:1fr;gap:48px}
-  .hero-right{order:1}
-  .phone-shell{width:220px;height:440px}
-  .fb-top{right:-60px} .fb-bot{left:-60px}
-}
-@media(max-width:520px){
-  .hero{padding:96px 20px 60px}
-  .hero-h1{font-size:2.1rem}
-}
+.chip-top { top: 8%; left: 18%; animation: float1 4s ease-in-out infinite; }
+.chip-bot { bottom: 22%; right: 14%; animation: float2 4.5s ease-in-out infinite; }
+@keyframes float1 { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-10px) } }
+@keyframes float2 { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(8px) } }
 
-/* ═══════════════════════════════════════════════════════
-   MARQUEE
-════════════════════════════════════════════════════════ */
-.marquee-rail {
-  overflow: hidden;
+/* ── MARQUEE ───────────────────────────────────────────────────────── */
+.marquee-wrap {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 14px 0;
-  background: var(--bg-soft);
+  padding: 18px 0;
+  overflow: hidden;
+  background: var(--sur);
 }
 .marquee-track {
   display: flex;
   align-items: center;
-  gap: 20px;
-  width: max-content;
-  animation: marquee 22s linear infinite;
+  gap: 0;
+  white-space: nowrap;
+  animation: marquee 35s linear infinite;
 }
-.marquee-track span { font-size:13px; font-weight:500; color:var(--text-soft); white-space:nowrap; }
-.marquee-track .sep { color:var(--border); font-size:16px; }
-@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.marquee-track span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t3);
+  padding: 0 24px;
+  letter-spacing: 0.04em;
+}
+.marquee-track .dot {
+  color: var(--gold);
+  padding: 0 4px;
+  opacity: 0.5;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
 
-/* ═══════════════════════════════════════════════════════
-   PROBLEM
-════════════════════════════════════════════════════════ */
-.pb-section { background: var(--bg); text-align:center; }
-.pb-grid {
+/* ── AI ADVISOR ────────────────────────────────────────────────────── */
+.ai-section {
+  background: var(--sur);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.ai-layout {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(40px, 5vw, 80px);
+  align-items: center;
 }
-.pb-card {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  padding: 36px 28px;
-  text-align: start;
-  transition: box-shadow .2s, transform .2s, border-color .2s;
+.ai-text .sec-title { text-align: left; }
+.ai-text .sec-sub { text-align: left; margin: 0; }
+.ai-text .tag { margin-bottom: 16px; }
+.ai-insights {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.pb-card:hover { box-shadow:0 10px 40px rgba(0,0,0,.07); transform:translateY(-4px); border-color:#d0d4f5; }
-.pb-icon { font-size:36px; margin-bottom:18px; }
-.pb-card h3 {
-  font-family:Poppins,sans-serif;
-  font-weight:700; font-size:18px;
-  color:var(--text); margin:0 0 10px;
+.insight-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  box-shadow: 0 2px 12px rgba(59,91,219,0.05);
+  transition: transform .25s, box-shadow .25s, border-color .25s;
 }
-.pb-card p { font-size:14px; line-height:1.7; color:var(--text-mid); margin:0; }
-@media(max-width:768px){ .pb-grid{grid-template-columns:1fr} }
+.insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(59,91,219,0.10);
+  border-color: var(--border2);
+}
+.insight-card.important { border-left: 3px solid #ef4444; }
+.insight-card.suggestion { border-left: 3px solid var(--gold); }
+.insight-card.info { border-left: 3px solid #3b82f6; }
+.insight-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+.insight-card.important .insight-dot { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.4); }
+.insight-card.suggestion .insight-dot { background: var(--gold); box-shadow: 0 0 10px rgba(59,91,219,0.4); }
+.insight-card.info .insight-dot { background: #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.4); }
+.insight-body-wrap { flex: 1; min-width: 0; }
+.insight-severity {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.sev-important { color: #ef4444; }
+.sev-suggestion { color: var(--gold); }
+.sev-info { color: #3b82f6; }
+.insight-title {
+  font-family: var(--f-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t1);
+  margin: 4px 0 6px;
+  letter-spacing: -0.01em;
+}
+.insight-body {
+  font-size: 13px;
+  color: var(--t2);
+  line-height: 1.6;
+}
 
-/* ═══════════════════════════════════════════════════════
-   FEATURES BENTO
-════════════════════════════════════════════════════════ */
-.ft-section { background: var(--bg-soft); text-align:center; }
-.bento {
+/* ── FEATURE CARDS ─────────────────────────────────────────────────── */
+.feat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto auto;
   gap: 16px;
 }
-.bc {
-  background: var(--card);
-  border: 1.5px solid var(--border);
+.feat-card {
+  background: var(--sur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+  box-shadow: 0 2px 12px rgba(59,91,219,0.05);
+  cursor: default;
+}
+.feat-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(59,91,219,0.12);
+}
+.feat-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(59,91,219,0.20);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+.feat-card h3 {
+  font-family: var(--f-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t1);
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+.feat-card p {
+  font-size: 13px;
+  color: var(--t2);
+  line-height: 1.65;
+  margin: 0 0 20px;
+}
+
+/* Feature UI snippets */
+.feat-ui { display: flex; flex-direction: column; gap: 6px; }
+.fui-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sur2);
+  border-radius: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+}
+.fui-item { font-size: 11px; color: var(--t1); flex: 1; }
+.fui-price { font-size: 11px; font-weight: 600; color: var(--t2); }
+.fui-tag {
+  font-size: 9px;
+  font-weight: 600;
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+.fui-tag.live { background: rgba(74,222,128,0.1); color: #4ade80; }
+.fui-tag.updating { background: rgba(59,91,219,0.10); color: var(--gold); }
+.fui-tag.out { background: rgba(239,68,68,0.1); color: #f87171; }
+
+.feat-langs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lang-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  background: var(--sur2);
+  border: 1px solid var(--border);
+  color: var(--t2);
+}
+.lang-pill.active { background: var(--gold-dim); border-color: rgba(59,91,219,0.30); color: var(--gold); }
+.lang-pill.dim { color: var(--t3); }
+
+.feat-allergens { display: flex; flex-direction: column; gap: 7px; }
+.al-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--t2); }
+.al-badge {
+  width: 22px;
+  height: 22px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(59,91,219,0.20);
+  border-radius: 5px;
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.al-cal {
+  font-size: 11px;
+  color: var(--t3);
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.feat-branches { display: flex; flex-direction: column; gap: 6px; }
+.branch-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--t2);
+  padding: 7px 10px;
+  background: var(--sur2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.branch-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex-shrink: 0;
+}
+.branch-count { margin-left: auto; font-size: 11px; color: var(--t3); }
+
+.feat-tables { display: flex; flex-wrap: wrap; gap: 6px; }
+.table-chip {
+  width: 38px;
+  height: 38px;
+  background: var(--sur2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+}
+.table-chip.active {
+  background: var(--gold-dim);
+  border-color: rgba(59,91,219,0.30);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(59,91,219,0.15);
+}
+
+.feat-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 60px;
+}
+.chart-bar {
+  flex: 1;
+  background: rgba(59,91,219,0.10);
+  border-radius: 4px 4px 0 0;
+  transition: background .3s;
+}
+.chart-bar.active { background: var(--gold); }
+
+/* ── DASHBOARD ─────────────────────────────────────────────────────── */
+.dashboard-section { background: var(--sur); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.dash-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: clamp(40px, 5vw, 80px);
+  align-items: center;
+}
+.dash-text .sec-title { text-align: left; }
+.dash-text .sec-sub { text-align: left; margin: 0; }
+.dash-card {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 0 0 1px rgba(59,91,219,0.06), 0 24px 64px rgba(59,91,219,0.10);
+}
+.dash-metrics {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.metric-label { font-size: 11px; color: var(--t3); margin-bottom: 4px; }
+.metric-value { font-family: var(--f-mono); font-size: 22px; font-weight: 700; color: var(--t1); letter-spacing: -0.02em; }
+.metric-delta { font-size: 11px; color: #4ade80; margin-top: 3px; }
+.dash-chart-wrap { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.dash-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 80px;
+  margin-bottom: 8px;
+}
+.db {
+  flex: 1;
+  height: var(--h);
+  background: rgba(59,91,219,0.10);
+  border-radius: 3px 3px 0 0;
+  transition: background .2s;
+}
+.db.peak { background: var(--gold); }
+.db:hover { background: rgba(59,91,219,0.25); }
+.dash-chart-labels {
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+}
+.dash-chart-labels span { font-size: 10px; color: var(--t3); flex: 1; text-align: center; }
+.dd-title { font-size: 11px; font-weight: 600; color: var(--t3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+.dash-dishes { display: flex; flex-direction: column; gap: 10px; }
+.dd-item { display: flex; align-items: center; gap: 10px; }
+.dd-rank { font-family: var(--f-mono); font-size: 10px; font-weight: 700; color: var(--t3); width: 20px; flex-shrink: 0; }
+.dd-name { font-size: 12px; color: var(--t1); width: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-bar-wrap { flex: 1; height: 4px; background: rgba(59,91,219,0.10); border-radius: 2px; overflow: hidden; }
+.dd-bar { height: 100%; background: var(--gold); border-radius: 2px; opacity: 0.7; }
+.dd-views { font-family: var(--f-mono); font-size: 10px; color: var(--t3); flex-shrink: 0; width: 60px; text-align: right; }
+
+/* ── QR SECTION ────────────────────────────────────────────────────── */
+.qr-section { }
+.qr-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(40px, 5vw, 80px);
+  align-items: center;
+}
+.qr-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.qr-card {
+  background: var(--sur);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(59,91,219,0.07), 0 20px 48px rgba(59,91,219,0.10);
+}
+.qr-table-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.qr-code-svg { display: block; margin: 0 auto 20px; }
+.qr-brand {
+  font-family: var(--f-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t1);
+  margin-bottom: 6px;
+}
+.qr-hint { font-size: 11px; color: var(--t3); }
+.qr-scan-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: scan 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes scan {
+  0%,100% { transform: translate(-50%,-60px); opacity: 0; }
+  20%,80% { opacity: 1; }
+  50% { transform: translate(-50%,60px); }
+}
+.qr-text .sec-title { text-align: left; }
+.qr-text .sec-sub { text-align: left; margin: 0; }
+.qr-text .tag { margin-bottom: 16px; }
+.check-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.check-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--t2);
+}
+
+/* ── MULTI-BUSINESS ────────────────────────────────────────────────── */
+.multi-section { background: var(--sur); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.multi-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(40px, 5vw, 80px);
+  align-items: center;
+}
+.multi-text .sec-title { text-align: left; }
+.multi-text .sec-sub { text-align: left; margin: 0; }
+.multi-text .tag { margin-bottom: 16px; }
+.multi-cards { display: flex; flex-direction: column; gap: 10px; }
+.biz-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition: border-color .2s, transform .2s;
+  box-shadow: 0 2px 8px rgba(59,91,219,0.04);
+}
+.biz-card:hover { border-color: var(--border2); transform: translateX(4px); }
+.biz-card.active { border-color: rgba(59,91,219,0.25); }
+.biz-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(13,27,62,0.15);
+  flex-shrink: 0;
+}
+.biz-dot.active { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.4); }
+.biz-name { font-size: 14px; font-weight: 500; color: var(--t1); }
+.biz-meta { font-size: 12px; color: var(--t3); margin-top: 2px; }
+.biz-status {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74,222,128,0.08);
+  border: 1px solid rgba(74,222,128,0.15);
+  border-radius: 100px;
+  padding: 3px 10px;
+}
+.add-card {
+  cursor: pointer;
+  border-style: dashed;
+  justify-content: center;
+  color: var(--t3);
+  font-size: 13px;
+  gap: 8px;
+  padding: 16px;
+  transition: border-color .2s, color .2s;
+}
+.add-card:hover { border-color: var(--gold); color: var(--gold); transform: none; }
+
+/* ── ANALYTICS ─────────────────────────────────────────────────────── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.an-card {
+  background: var(--sur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: border-color .25s, transform .25s;
+  box-shadow: 0 2px 12px rgba(59,91,219,0.05);
+}
+.an-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.an-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(59,91,219,0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.an-card h3 {
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--t1);
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+.an-card p { font-size: 14px; color: var(--t2); line-height: 1.65; margin: 0; }
+
+/* ── HOW IT WORKS ──────────────────────────────────────────────────── */
+.how-section { }
+.how-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 60px;
+}
+.how-step {
+  flex: 1;
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--sur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px rgba(59,91,219,0.05);
+}
+.step-num {
+  font-family: var(--f-mono);
+  font-size: 40px;
+  font-weight: 800;
+  color: rgba(59,91,219,0.20);
+  margin-bottom: 16px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.how-step h3 {
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--t1);
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+.how-step p { font-size: 14px; color: var(--t2); line-height: 1.65; margin: 0; }
+.how-arrow {
+  color: var(--t3);
+  padding-top: 48px;
+  flex-shrink: 0;
+}
+
+/* ── PRICING ───────────────────────────────────────────────────────── */
+.pricing-section { background: var(--sur); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.price-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 32px 28px;
-  transition: box-shadow .2s, transform .2s, border-color .2s;
+  position: relative;
+  box-shadow: 0 2px 12px rgba(59,91,219,0.05);
+  transition: border-color .25s, transform .25s;
+}
+.price-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.price-card.featured {
+  border-color: rgba(59,91,219,0.30);
+  background: var(--sur);
+  box-shadow: 0 0 0 1px rgba(59,91,219,0.12), 0 20px 60px rgba(59,91,219,0.12);
+}
+.plan-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-dim);
+  border: 1px solid rgba(59,91,219,0.25);
+  border-radius: 100px;
+  padding: 3px 10px;
+  margin-bottom: 16px;
+}
+.plan-name {
+  font-family: var(--f-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--t1);
+  margin-bottom: 8px;
+}
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  margin-bottom: 12px;
+}
+.plan-price strong {
+  font-family: var(--f-mono);
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -0.04em;
+}
+.plan-price span { font-size: 14px; color: var(--t3); }
+.plan-desc { font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.plan-feats {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.bc:hover { box-shadow:0 12px 40px rgba(118,141,251,.1); transform:translateY(-4px); border-color:#d0d4f5; }
-.bc-tall { grid-row: span 2; }
-.bc-wide { grid-column: span 2; }
-.bc-icon {
-  width:50px; height:50px;
-  background:rgba(118,141,251,.08);
-  border-radius:14px;
-  display:flex; align-items:center; justify-content:center;
-  color:var(--brand);
-  flex-shrink:0;
-  margin-bottom:4px;
-}
-.bc h3 {
-  font-family:Poppins,sans-serif;
-  font-weight:700; font-size:17px;
-  color:var(--text); margin:0;
-}
-.bc p { font-size:14px; line-height:1.7; color:var(--text-mid); margin:0; }
-.bc-visual { margin-top:auto; padding-top:16px; }
-/* Editor visual */
-.editor-vis { display:flex; flex-direction:column; gap:8px; }
-.ev-row { display:flex; gap:6px; }
-.ev-tag { font-size:11px; font-weight:600; padding:4px 12px; border-radius:999px; background:#f2f2f8; color:#888; }
-.ev-tag.active { background:var(--brand); color:#fff; }
-.ev-item { display:flex; justify-content:space-between; align-items:center; background:#f7f8fd; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:500; color:var(--text); }
-.ev-item.new { color:var(--brand); border:1.5px dashed rgba(118,141,251,.3); background:transparent; justify-content:center; }
-.ev-price { font-weight:700; color:var(--brand); }
-/* Variant visual */
-.var-vis { display:flex; flex-wrap:wrap; gap:8px; }
-.vv-chip { font-size:12px; font-weight:600; padding:5px 14px; border-radius:999px; background:#f2f2f8; color:#777; border:1.5px solid transparent; }
-.vv-chip.active { background:rgba(118,141,251,.1); color:var(--brand); border-color:rgba(118,141,251,.3); }
-@media(max-width:900px){
-  .bento{grid-template-columns:1fr 1fr}
-  .bc-tall{grid-row:span 1}
-}
-@media(max-width:600px){ .bento{grid-template-columns:1fr} .bc-wide{grid-column:span 1} }
-
-/* ═══════════════════════════════════════════════════════
-   HOW IT WORKS
-════════════════════════════════════════════════════════ */
-.hiw-section { background:var(--bg); text-align:center; }
-.hiw-grid {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  margin-top: 8px;
-}
-.hiw-step {
-  flex: 1;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  padding: 36px 28px;
-  text-align: center;
-  transition: box-shadow .2s, transform .2s;
-}
-.hiw-step:hover { box-shadow:0 12px 40px rgba(118,141,251,.08); transform:translateY(-4px); }
-.hiw-line {
-  flex: 0 0 40px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(118,141,251,.4) 0%, rgba(118,141,251,.1) 100%);
-  margin-top: 76px;
-}
-.hiw-num {
-  font-family:Poppins,sans-serif;
-  font-weight:800; font-size:12px;
-  letter-spacing:.1em; color:var(--brand);
-  margin-bottom:14px;
-}
-.hiw-ico {
-  width:60px; height:60px;
-  background:rgba(118,141,251,.07);
-  border-radius:16px;
-  display:flex; align-items:center; justify-content:center;
-  margin:0 auto 18px; color:var(--brand);
-}
-.hiw-step h3 { font-family:Poppins,sans-serif; font-weight:700; font-size:18px; color:var(--text); margin:0 0 10px; }
-.hiw-step p  { font-size:14px; line-height:1.7; color:var(--text-mid); margin:0; }
-@media(max-width:768px){ .hiw-grid{flex-direction:column;gap:16px} .hiw-line{display:none} }
-
-/* ═══════════════════════════════════════════════════════
-   TESTIMONIALS
-════════════════════════════════════════════════════════ */
-.testi-section { background:var(--bg-soft); text-align:center; }
-.testi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-.testi-card {
-  background:var(--card);
-  border:1.5px solid var(--border);
-  border-radius:20px;
-  padding:32px 28px;
-  text-align:start;
-  transition:box-shadow .2s, transform .2s;
-}
-.testi-card:hover { box-shadow:0 12px 40px rgba(0,0,0,.07); transform:translateY(-4px); }
-.testi-stars { color:#f59e0b; font-size:15px; letter-spacing:2px; margin-bottom:14px; }
-.testi-card p { font-size:14px; line-height:1.75; color:var(--text-mid); margin:0 0 20px; }
-.testi-who { display:flex; align-items:center; gap:12px; }
-.testi-av { width:38px; height:38px; border-radius:50%; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.testi-who strong { display:block; font-size:14px; color:var(--text); }
-.testi-who span { font-size:12px; color:var(--text-soft); margin-top:1px; display:block; }
-@media(max-width:900px){ .testi-grid{grid-template-columns:1fr;gap:16px} }
-
-/* ═══════════════════════════════════════════════════════
-   PRICING
-════════════════════════════════════════════════════════ */
-.price-section { background:var(--bg); text-align:center; }
-.price-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; max-width:1060px; margin:0 auto; }
-.price-card {
-  background:var(--card);
-  border:1.5px solid var(--border);
-  border-radius:24px;
-  padding:40px 36px;
-  text-align:start;
-  position:relative;
-  transition:box-shadow .2s, transform .2s;
-}
-.price-card.featured {
-  border-color:var(--brand);
-  box-shadow:0 0 0 3px rgba(118,141,251,.1), 0 20px 50px rgba(118,141,251,.12);
-}
-.price-card.featured:hover { transform:translateY(-4px); box-shadow:0 0 0 3px rgba(118,141,251,.12), 0 28px 60px rgba(118,141,251,.18); }
-.pc-badge {
-  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
-  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-d) 100%);
-  color:#fff; font-size:11px; font-weight:700;
-  padding:4px 18px; border-radius:999px; white-space:nowrap;
-}
-.pc-name { font-family:'Poppins',sans-serif; font-weight:600; font-size:14px; color:var(--text-soft); margin-bottom:10px; letter-spacing:.05em; text-transform:uppercase; }
-.pc-price { font-family:Poppins,sans-serif; font-weight:800; font-size:48px; letter-spacing:-.03em; color:var(--text); line-height:1; margin-bottom:12px; }
-.pc-price span { font-size:16px; font-weight:500; color:var(--text-soft); letter-spacing:0; }
-.pc-desc { font-size:14px; color:var(--text-mid); margin-bottom:28px; }
-.pc-list { list-style:none; padding:0; margin:0 0 32px; display:flex; flex-direction:column; gap:12px; }
-.pc-list li { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; }
-.pc-list .on { color:var(--text); }
-.pc-list .off { color:#bbb; }
-.pc-btn-out {
-  width:100%; padding:13px; border-radius:12px;
-  border:1.5px solid var(--border); background:transparent;
-  color:var(--text); font-size:15px; font-weight:600; cursor:pointer;
-  font-family:'Poppins',sans-serif;
-  transition:background .15s, border-color .15s;
-}
-.pc-btn-out:hover { background:var(--bg-soft); border-color:#c4c8f0; }
-.pc-btn-fill {
-  width:100%; padding:13px; border-radius:12px; border:none;
-  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-d) 100%);
-  color:#fff; font-size:15px; font-weight:700; cursor:pointer;
-  font-family:'Poppins',sans-serif;
-  box-shadow:0 4px 18px var(--brand-glow);
-  transition:opacity .15s, transform .1s, box-shadow .15s;
-}
-.pc-btn-fill:hover { opacity:.92; transform:translateY(-1px); box-shadow:0 8px 28px rgba(118,141,251,.3); }
-@media(max-width:860px){ .price-grid{grid-template-columns:1fr} }
-@media(min-width:861px) and (max-width:1060px){ .price-grid{grid-template-columns:1fr 1fr} }
-
-/* ═══════════════════════════════════════════════════════
-   FAQ
-════════════════════════════════════════════════════════ */
-.faq-section { background:var(--bg-soft); }
-.faq-wrap { display:grid; grid-template-columns:1fr 1.6fr; gap:72px; align-items:start; }
-.faq-right { display:flex; flex-direction:column; }
-.faq-item {
-  border-bottom:1.5px solid var(--border);
-  padding:20px 0;
-  cursor:pointer;
-  transition:background .1s;
-}
-.faq-q {
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
-  font-size:15px; font-weight:600; color:var(--text); user-select:none;
-}
-.faq-arr { flex-shrink:0; color:var(--text-soft); transition:transform .22s, color .15s; }
-.faq-arr.rot { transform:rotate(180deg); color:var(--brand); }
-.faq-a { font-size:14px; line-height:1.75; color:var(--text-mid); padding-top:12px; }
-.faq-enter-active,.faq-leave-active { transition:all .22s ease; overflow:hidden; }
-.faq-enter-from,.faq-leave-to { opacity:0; max-height:0; padding-top:0; }
-.faq-enter-to,.faq-leave-from { opacity:1; max-height:200px; }
-@media(max-width:900px){ .faq-wrap{grid-template-columns:1fr;gap:32px} }
-
-/* ═══════════════════════════════════════════════════════
-   FINAL CTA
-════════════════════════════════════════════════════════ */
-.cta-section { background:var(--bg); }
-.cta-card {
-  background:var(--dark);
-  border-radius:28px;
-  padding:80px 48px;
-  text-align:center;
-  position:relative;
-  overflow:hidden;
-}
-.cta-glow-l {
-  position:absolute; top:-80px; left:-60px;
-  width:300px; height:300px;
-  background:radial-gradient(circle,rgba(118,141,251,.3) 0%,transparent 70%);
-  pointer-events:none;
-}
-.cta-glow-r {
-  position:absolute; bottom:-80px; right:-60px;
-  width:300px; height:300px;
-  background:radial-gradient(circle,rgba(167,139,250,.2) 0%,transparent 70%);
-  pointer-events:none;
-}
-.cta-h2 {
-  font-family:Poppins,sans-serif;
-  font-weight:800; font-size:clamp(2rem,4vw,3rem);
-  color:#fff; margin:0 0 18px; letter-spacing:-.03em; position:relative;
-}
-.cta-p { font-size:17px; color:rgba(255,255,255,.55); max-width:460px; margin:0 auto 36px; line-height:1.65; position:relative; }
-.cta-note { font-size:13px; color:rgba(255,255,255,.3); margin-top:16px; font-weight:500; position:relative; }
-@media(max-width:600px){ .cta-card{padding:52px 28px} }
-
-/* ═══════════════════════════════════════════════════════
-   CONTACT
-════════════════════════════════════════════════════════ */
-.contact-section { background: var(--dark); }
-.contact-inner {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 72px;
-  align-items: center;
-  max-width: 900px;
-  margin: 0 auto;
-}
-.contact-h2 {
-  font-size: clamp(1.75rem, 3.5vw, 2.4rem);
-  font-weight: 800;
-  color: #fff;
-  margin: 12px 0 16px;
-  line-height: 1.2;
-}
-.contact-sub {
-  font-size: 15px;
-  color: rgba(255,255,255,.4);
-  line-height: 1.7;
-  margin: 0 0 32px;
-}
-.contact-info { display: flex; flex-direction: column; gap: 14px; }
-.ci-item {
+.plan-feats li {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: rgba(255,255,255,.5);
-}
-.ci-icon {
-  width: 34px; height: 34px;
-  border-radius: 10px;
-  background: rgba(118,141,251,.12);
-  border: 1px solid rgba(118,141,251,.2);
-  display: flex; align-items: center; justify-content: center;
-  color: #768dfb;
-  flex-shrink: 0;
-}
-.contact-form {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 20px;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.cf-group { display: flex; flex-direction: column; gap: 7px; }
-.cf-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.45); }
-.cf-input,
-.cf-textarea {
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #fff;
-  font-family: inherit;
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
-  resize: none;
-}
-.cf-input::placeholder, .cf-textarea::placeholder { color: rgba(255,255,255,.2); }
-.cf-input:focus, .cf-textarea:focus {
-  border-color: rgba(118,141,251,.6);
-  box-shadow: 0 0 0 3px rgba(118,141,251,.12);
-}
-.cf-submit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
-  background: #768dfb;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 13px 24px;
-  font-size: 15px;
+  font-size: 13px;
+  color: var(--t2);
+}
+.plan-btn {
+  width: 100%;
+  background: rgba(59,91,219,0.07);
+  border: 1px solid var(--border2);
+  color: var(--t1);
+  font-size: 14px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background .2s, transform .15s;
+  padding: 13px;
+  border-radius: 100px;
+  transition: background .2s, border-color .2s, transform .2s;
 }
-.cf-submit:hover { background: #5b73e8; }
-.cf-submit:active { transform: scale(.98); }
-.cf-submit.sent { background: #22c55e; cursor: default; }
-@media(max-width:768px) {
-  .contact-inner { grid-template-columns: 1fr; gap: 40px; }
-  .contact-left { text-align: center; }
-  .contact-info { align-items: center; }
+.plan-btn:hover { background: rgba(59,91,219,0.13); transform: translateY(-1px); }
+.plan-btn.gold { background: var(--gold); border-color: transparent; color: #ffffff; }
+.plan-btn.gold:hover { opacity: 0.9; }
+
+/* ── FAQ ───────────────────────────────────────────────────────────── */
+.faq-section { }
+.faq-inner .sec-header { margin-bottom: 48px; }
+.faq-list {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: border-color .2s;
+}
+.faq-item:hover, .faq-item.open { border-color: var(--border2); }
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--t1);
+  gap: 16px;
+}
+.faq-arrow {
+  color: var(--t3);
+  flex-shrink: 0;
+  transition: transform .25s;
+}
+.faq-arrow.open { transform: rotate(180deg); color: var(--gold); }
+.faq-a {
+  padding: 0 24px 20px;
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.7;
 }
 
-/* ═══════════════════════════════════════════════════════
-   FOOTER
-════════════════════════════════════════════════════════ */
-.land-footer { background:#09090f; padding:64px 24px 32px; }
-.ft-wrap {
-  max-width:1120px; margin:0 auto 48px;
-  display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:48px;
+/* ── CTA SECTION ───────────────────────────────────────────────────── */
+.cta-section { padding: clamp(60px, 8vw, 100px) 0; }
+.cta-card {
+  position: relative;
+  background: var(--sur);
+  border: 1px solid rgba(59,91,219,0.20);
+  border-radius: 24px;
+  padding: clamp(48px, 6vw, 80px);
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(59,91,219,0.06), 0 24px 64px rgba(59,91,219,0.10);
 }
-.ft-brand p { font-size:14px; line-height:1.7; color:rgba(255,255,255,.35); margin-top:16px; max-width:220px; }
-.ft-links { display:flex; gap:48px; }
-.ft-col { display:flex; flex-direction:column; gap:12px; }
-.ft-col h4 { font-size:12px; font-weight:600; color:rgba(255,255,255,.5); letter-spacing:.08em; text-transform:uppercase; margin:0 0 4px; }
-.ft-col a { font-size:14px; color:rgba(255,255,255,.35); text-decoration:none; transition:color .15s; }
-.ft-col a:hover { color:rgba(255,255,255,.75); }
-.ft-bottom {
-  max-width:1120px; margin:0 auto;
-  padding-top:24px; border-top:1px solid rgba(255,255,255,.07);
-  display:flex; justify-content:space-between;
-  font-size:13px; color:rgba(255,255,255,.2);
+.cta-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(59,91,219,0.07) 0%, transparent 70%);
+  pointer-events: none;
 }
-@media(max-width:900px){ .ft-wrap{grid-template-columns:1fr 1fr;gap:32px} .ft-links{gap:32px} }
-@media(max-width:560px){ .ft-wrap{grid-template-columns:1fr} .ft-links{flex-direction:column;gap:24px} .ft-bottom{flex-direction:column;gap:8px} }
+.cta-title {
+  font-family: var(--f-display);
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 800;
+  color: var(--t1);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin: 0 0 16px;
+  position: relative;
+}
+.cta-sub {
+  font-size: clamp(14px, 1.3vw, 16px);
+  color: var(--t2);
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto 36px;
+  position: relative;
+}
+.btn-cta-main {
+  background: var(--gold);
+  color: #ffffff;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 16px 36px;
+  border-radius: 100px;
+  transition: opacity .2s, transform .2s;
+  position: relative;
+}
+.btn-cta-main:hover { opacity: 0.88; transform: translateY(-2px); }
+.cta-note {
+  font-size: 12px;
+  color: var(--t3);
+  margin-top: 16px;
+  position: relative;
+}
+
+/* ── FOOTER ────────────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 60px 0 0;
+  background: var(--bg);
+}
+.footer-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+  margin-bottom: 48px;
+}
+.footer-brand { flex: 1; }
+.footer-tagline { font-size: 13px; color: var(--t3); line-height: 1.6; max-width: 240px; margin-top: 12px; }
+.footer-cols {
+  display: flex;
+  gap: 60px;
+  flex-shrink: 0;
+}
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.footer-heading {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 6px;
+}
+.footer-col a {
+  text-decoration: none;
+  font-size: 13px;
+  color: var(--t2);
+  transition: color .2s;
+}
+.footer-col a:hover { color: var(--t1); }
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding: 20px clamp(20px, 5vw, 60px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--t3);
+}
+
+/* ── TRANSITIONS ───────────────────────────────────────────────────── */
+.fade-down-enter-active, .fade-down-leave-active { transition: opacity .18s, transform .18s; }
+.fade-down-enter-from, .fade-down-leave-to { opacity: 0; transform: translateY(-6px); }
+
+/* ── RESPONSIVE ────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .nav-links { display: none; }
+  .nav-actions .nav-login, .nav-actions .nav-cta { display: none; }
+  .hamburger { display: flex; }
+  .mobile-drawer.open { display: flex; }
+
+  .hero-inner { grid-template-columns: 1fr; text-align: center; }
+  .hero-phone { display: none; }
+  .hero-sub, .hero-h1 { max-width: 100%; }
+  .hero-btns { justify-content: center; }
+  .hero-stats { justify-content: center; }
+
+  .feat-grid { grid-template-columns: 1fr 1fr; }
+  .ai-layout { grid-template-columns: 1fr; }
+  .dash-layout { grid-template-columns: 1fr; }
+  .qr-layout { grid-template-columns: 1fr; }
+  .qr-visual { order: -1; }
+  .multi-layout { grid-template-columns: 1fr; }
+  .analytics-grid { grid-template-columns: 1fr 1fr; }
+  .how-steps { flex-direction: column; }
+  .how-arrow { display: none; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+  .dash-metrics { grid-template-columns: 1fr 1fr; }
+  .footer-inner { flex-direction: column; gap: 32px; }
+  .footer-cols { gap: 32px; }
+  .chip-top { left: 8%; }
+  .chip-bot { right: 8%; }
+}
+
+@media (max-width: 640px) {
+  .feat-grid { grid-template-columns: 1fr; }
+  .analytics-grid { grid-template-columns: 1fr; }
+  .footer-cols { flex-direction: column; gap: 24px; }
+  .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .dash-metrics { grid-template-columns: 1fr; gap: 12px; }
+  .hero-stats { flex-direction: column; gap: 16px; align-items: center; }
+  .stat-div { width: 32px; height: 1px; }
+}
 </style>
