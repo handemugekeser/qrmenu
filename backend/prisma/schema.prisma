@@ -235,3 +235,83 @@ model Analytics {
   menu       Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
   @@map("analytics")
 }
+
+enum AnalyticsEventType {
+  SCAN_OPEN
+  CATEGORY_VIEW
+  ITEM_VIEW
+  LANGUAGE_CHANGE
+  SESSION_END
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  businessId  String
+  menuId      String?
+  type        AnalyticsEventType
+  itemId      String?
+  categoryId  String?
+  language    String?
+  sessionId   String
+  tableNumber String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  metadata    Json?
+
+  @@index([businessId, timestamp])
+  @@index([businessId, type, timestamp])
+  @@map("analytics_events")
+}
+
+model DailySnapshot {
+  id             String   @id @default(cuid())
+  businessId     String
+  date           DateTime @db.Date
+  totalScans     Int      @default(0)
+  uniqueSessions Int      @default(0)
+  topItems       Json
+  topCategories  Json
+  languageDist   Json
+  hourlyDist     Json
+  avgSessionMs   Int      @default(0)
+
+  @@unique([businessId, date])
+  @@index([businessId, date])
+  @@map("daily_snapshots")
+}
+
+// ─────────────────────────────────────────
+// INSIGHTS
+// ─────────────────────────────────────────
+
+enum InsightSeverity {
+  INFO
+  SUGGESTION
+  IMPORTANT
+}
+
+enum InsightStatus {
+  NEW
+  VIEWED
+  APPLIED
+  DISMISSED
+}
+
+model Insight {
+  id         String          @id @default(cuid())
+  businessId String
+  ruleId     String
+  severity   InsightSeverity
+  title      String
+  body       String
+  rawData    Json
+  actionType String?
+  actionData Json?
+  status     InsightStatus   @default(NEW)
+  weekOf     DateTime        @db.Date
+  createdAt  DateTime        @default(now())
+
+  @@unique([businessId, ruleId, weekOf])
+  @@index([businessId, status, weekOf])
+  @@map("insights")
+}

@@ -45,7 +45,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 const goRegister = () => router.push('/register')
 const goLogin    = () => router.push('/login')
 
-const faqOpen = ref<boolean[]>([false, false, false, false, false])
+const faqOpen = ref<boolean[]>([false, false, false, false, false, false, false])
 const toggleFaq = (i: number) => { faqOpen.value[i] = !faqOpen.value[i] }
 const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string }>)
 
@@ -362,7 +362,20 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
         </div>
 
         <div class="feat-grid">
-          <!-- Card 1: Update menus -->
+          <!-- Card 1: AI Menu Advisor -->
+          <div class="feat-card reveal">
+            <div class="feat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19 10.5l-5.1 1.8L12 18l-1.9-5.7L5 10.5l5.1-1.8z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></svg>
+            </div>
+            <h3>{{ t('features.feat6Title') }}</h3>
+            <p>{{ t('features.feat6Desc') }}</p>
+            <div class="feat-ai-demo">
+              <div class="ai-demo-badge">{{ t('features.aiDemoBadge') }}</div>
+              <div class="ai-demo-text">{{ t('features.aiDemoText') }}</div>
+            </div>
+          </div>
+
+          <!-- Card: Update menus -->
           <div class="feat-card reveal">
             <div class="feat-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -450,23 +463,6 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
             </div>
           </div>
 
-          <!-- Card 6: Analytics -->
-          <div class="feat-card reveal">
-            <div class="feat-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            </div>
-            <h3>{{ t('features.feat6Title') }}</h3>
-            <p>{{ t('features.feat6Desc') }}</p>
-            <div class="feat-chart">
-              <div class="chart-bar" style="height:45%"></div>
-              <div class="chart-bar" style="height:65%"></div>
-              <div class="chart-bar" style="height:40%"></div>
-              <div class="chart-bar active" style="height:88%"></div>
-              <div class="chart-bar" style="height:72%"></div>
-              <div class="chart-bar" style="height:55%"></div>
-              <div class="chart-bar" style="height:80%"></div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -667,40 +663,6 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
       </div>
     </section>
 
-    <!-- ══ ANALYTICS ══════════════════════════════════════════════════ -->
-    <section id="analytics" class="section">
-      <div class="container">
-        <div class="sec-header reveal">
-          <div class="tag">{{ t('analytics.tag') }}</div>
-          <h2 class="sec-title" style="white-space:pre-line">{{ t('analytics.title') }}</h2>
-          <p class="sec-sub">{{ t('analytics.sub') }}</p>
-        </div>
-        <div class="analytics-grid">
-          <div class="an-card reveal">
-            <div class="an-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
-            </div>
-            <h3>{{ t('analytics.card1Title') }}</h3>
-            <p>{{ t('analytics.card1Desc') }}</p>
-          </div>
-          <div class="an-card reveal">
-            <div class="an-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            </div>
-            <h3>{{ t('analytics.card2Title') }}</h3>
-            <p>{{ t('analytics.card2Desc') }}</p>
-          </div>
-          <div class="an-card reveal">
-            <div class="an-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </div>
-            <h3>{{ t('analytics.card3Title') }}</h3>
-            <p>{{ t('analytics.card3Desc') }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ══ HOW IT WORKS ════════════════════════════════════════════════ -->
     <section id="how" class="section how-section">
       <div class="container">
@@ -767,7 +729,7 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f2') }}</li>
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f3') }}</li>
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f4') }}</li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f5') }}</li>
+              <li class="ai-feat"><svg class="ai-spark" width="14" height="14" viewBox="0 0 24 24" fill="#3b5bdb"><path d="M12 2l2.2 6.5L21 10.5l-6.8 2L12 19l-2.2-6.5L3 10.5l6.8-2z"/></svg>{{ t('pricing.pro.f5') }}</li>
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f6') }}</li>
             </ul>
             <button class="plan-btn gold" @click="goRegister">{{ t('pricing.pro.cta') }}</button>
@@ -780,8 +742,8 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f1') }}</li>
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f2') }}</li>
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f3') }}</li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f4') }}</li>
-              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f5') }}</li>
+              <li class="ai-feat"><svg class="ai-spark" width="14" height="14" viewBox="0 0 24 24" fill="#3b5bdb"><path d="M12 2l2.2 6.5L21 10.5l-6.8 2L12 19l-2.2-6.5L3 10.5l6.8-2z"/></svg>{{ t('pricing.premium.f4') }}</li>
+              <li class="ai-feat"><svg class="ai-spark" width="14" height="14" viewBox="0 0 24 24" fill="#3b5bdb"><path d="M12 2l2.2 6.5L21 10.5l-6.8 2L12 19l-2.2-6.5L3 10.5l6.8-2z"/></svg>{{ t('pricing.premium.f5') }}</li>
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f6') }}</li>
             </ul>
             <button class="plan-btn" @click="goRegister">{{ t('pricing.premium.cta') }}</button>
@@ -818,11 +780,65 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
     <section class="cta-section">
       <div class="container">
         <div class="cta-card reveal">
-          <div class="cta-glow"></div>
-          <h2 class="cta-title">{{ t('cta.title') }}</h2>
+          <div class="cta-grid" aria-hidden="true"></div>
+          <div class="cta-orb cta-orb-1" aria-hidden="true"></div>
+          <div class="cta-orb cta-orb-2" aria-hidden="true"></div>
+          <div class="cta-orb cta-orb-3" aria-hidden="true"></div>
+
+          <!-- AI badge -->
+          <div class="cta-badge">
+            <span class="cb-spark" aria-hidden="true">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.5L21 10.5l-6.8 2L12 19l-2.2-6.5L3 10.5l6.8-2z"/></svg>
+            </span>
+            {{ t('cta.badge') }}
+            <span class="cb-pulse" aria-hidden="true"></span>
+          </div>
+
+          <!-- Two-color editorial title -->
+          <h2 class="cta-title">
+            <span class="ct-lead">{{ t('cta.titleLead') }}</span>
+            <span class="ct-accent-wrap">
+              <em class="ct-accent">{{ t('cta.titleAccent') }}</em>
+              <svg class="ct-swash" viewBox="0 0 420 18" preserveAspectRatio="none" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ctaSwash" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#8aa0ff"/>
+                    <stop offset="50%" stop-color="#768dfb"/>
+                    <stop offset="100%" stop-color="#3b5bdb"/>
+                  </linearGradient>
+                </defs>
+                <path d="M4 12 Q 100 3, 210 9 T 416 7" stroke="url(#ctaSwash)" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </h2>
+
           <p class="cta-sub">{{ t('cta.sub') }}</p>
-          <button class="btn-cta-main" @click="goRegister">{{ t('cta.btn') }}</button>
-          <div class="cta-note">{{ t('cta.note') }}</div>
+
+          <!-- Conversion CTA -->
+          <button class="btn-cta-main" @click="goRegister">
+            <span class="cb-text">{{ t('cta.btn') }}</span>
+            <span class="cb-arrow">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </button>
+
+          <!-- Trust microcopy -->
+          <div class="cta-note">
+            <span class="cn-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5ee7b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ t('cta.micro1') }}
+            </span>
+            <span class="cn-dot">·</span>
+            <span class="cn-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5ee7b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ t('cta.micro2') }}
+            </span>
+            <span class="cn-dot">·</span>
+            <span class="cn-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5ee7b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ t('cta.micro3') }}
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -832,8 +848,16 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
       <div class="container footer-inner">
         <div class="footer-brand">
           <a href="#" class="brand">
-            <span class="brand-mark">M</span>
-            <span class="brand-name">MenusFlow</span>
+            <span class="brand-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="2" width="13" height="18" rx="2" fill="#3b5bdb" opacity="0.9"/>
+                <rect x="7" y="6" width="9" height="20" rx="2" fill="#3b5bdb" transform="rotate(-8 7 6)"/>
+                <rect x="5" y="4" width="11" height="17" rx="2" fill="#3b5bdb" opacity="0.6" transform="rotate(5 5 4)"/>
+              </svg>
+            </span>
+            <span class="brand-text">
+              <span class="brand-gold">menus</span><span class="brand-white">flow</span>
+            </span>
           </a>
           <p class="footer-tagline">{{ t('footer.tagline') }}</p>
         </div>
@@ -1620,7 +1644,7 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
   gap: clamp(40px, 5vw, 80px);
   align-items: center;
 }
-.ai-text .sec-title { text-align: left; }
+.ai-text .sec-title { text-align: left; font-size: clamp(26px, 3.2vw, 42px); }
 .ai-text .sec-sub { text-align: left; margin: 0; }
 .ai-text .tag { margin-bottom: 16px; }
 .ai-insights {
@@ -1848,6 +1872,25 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
 }
 .chart-bar.active { background: var(--gold); }
 
+.feat-ai-demo {
+  background: var(--gold-dim);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.ai-demo-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.ai-demo-text {
+  font-size: 12px;
+  color: var(--t1);
+  line-height: 1.5;
+}
+
 /* ── DASHBOARD ─────────────────────────────────────────────────────── */
 .dashboard-section { background: var(--sur); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .dash-layout {
@@ -2040,42 +2083,6 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
 }
 .add-card:hover { border-color: var(--gold); color: var(--gold); transform: none; }
 
-/* ── ANALYTICS ─────────────────────────────────────────────────────── */
-.analytics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.an-card {
-  background: var(--sur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px;
-  transition: border-color .25s, transform .25s;
-  box-shadow: 0 2px 12px rgba(59,91,219,0.05);
-}
-.an-card:hover { border-color: var(--border2); transform: translateY(-3px); }
-.an-icon {
-  width: 44px;
-  height: 44px;
-  background: var(--gold-dim);
-  border: 1px solid rgba(59,91,219,0.15);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 18px;
-}
-.an-card h3 {
-  font-family: var(--f-display);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--t1);
-  margin: 0 0 10px;
-  letter-spacing: -0.02em;
-}
-.an-card p { font-size: 14px; color: var(--t2); line-height: 1.65; margin: 0; }
-
 /* ── HOW IT WORKS ──────────────────────────────────────────────────── */
 .how-section { }
 .how-steps {
@@ -2253,62 +2260,221 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
 .cta-section { padding: clamp(60px, 8vw, 100px) 0; }
 .cta-card {
   position: relative;
-  background: var(--sur);
-  border: 1px solid rgba(59,91,219,0.20);
-  border-radius: 24px;
-  padding: clamp(48px, 6vw, 80px);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, #2a2030 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 100% 100%, #1f1a26 0%, transparent 70%),
+    linear-gradient(135deg, #191518 0%, #1d171c 100%);
+  border: 1px solid rgba(118,141,251,0.18);
+  border-radius: 28px;
+  padding: clamp(56px, 7vw, 96px) clamp(28px, 5vw, 64px);
   text-align: center;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(59,91,219,0.06), 0 24px 64px rgba(59,91,219,0.10);
+  isolation: isolate;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 30px 80px -20px rgba(25,21,24,0.55),
+    0 14px 36px -12px rgba(59,91,219,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.06);
 }
-.cta-glow {
+
+/* Subtle grid texture overlay */
+.cta-grid {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(ellipse, rgba(59,91,219,0.07) 0%, transparent 70%);
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(250,250,250,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250,250,250,0.025) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 0%, transparent 75%);
   pointer-events: none;
+  z-index: 0;
 }
+
+/* Floating colored orbs */
+.cta-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: 0;
+  will-change: transform;
+}
+.cta-orb-1 {
+  top: -20%;
+  left: -8%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(118,141,251,0.45) 0%, transparent 70%);
+  animation: cta-orb 14s ease-in-out infinite;
+}
+.cta-orb-2 {
+  bottom: -25%;
+  right: -10%;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(59,91,219,0.32) 0%, transparent 70%);
+  animation: cta-orb 18s ease-in-out -6s infinite reverse;
+}
+.cta-orb-3 {
+  top: 30%;
+  right: 12%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(138,160,255,0.28) 0%, transparent 70%);
+  animation: cta-orb 12s ease-in-out -3s infinite;
+}
+@keyframes cta-orb {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(30px, -22px) scale(1.1); }
+}
+
+/* AI badge */
+.cta-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 12px;
+  background: rgba(250,250,250,0.06);
+  border: 1px solid rgba(118,141,251,0.30);
+  color: #fafafa;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  margin-bottom: 28px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 24px rgba(118,141,251,0.18);
+}
+.cb-spark {
+  display: inline-flex;
+  color: #8aa0ff;
+  filter: drop-shadow(0 0 4px rgba(118,141,251,0.7));
+  animation: hb-twinkle 3.2s ease-in-out infinite;
+}
+@keyframes hb-twinkle {
+  0%,100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50%     { transform: scale(1.18) rotate(20deg); opacity: 0.85; }
+}
+.cb-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #5ee7b0;
+  box-shadow: 0 0 0 0 rgba(94,231,176,0.55);
+  animation: pulse-ring 2s infinite;
+}
+
+/* Title matches .sec-title sizing, two-color non-italic */
 .cta-title {
+  position: relative;
+  z-index: 1;
   font-family: var(--f-display);
-  font-size: clamp(32px, 4vw, 56px);
+  font-size: clamp(34px, 4.5vw, 58px);
   font-weight: 800;
-  color: var(--t1);
-  letter-spacing: -0.04em;
+  color: #fafafa;
+  letter-spacing: -0.03em;
   line-height: 1.1;
-  margin: 0 0 16px;
-  position: relative;
+  margin: 0 auto 16px;
+  max-width: 820px;
 }
+.ct-lead { display: block; }
+.ct-accent-wrap {
+  position: relative;
+  display: inline-block;
+}
+.ct-accent {
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: inherit;
+  background: linear-gradient(135deg, #a8b8ff 0%, #768dfb 50%, #3b5bdb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ct-swash {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.12em;
+  width: 100%;
+  height: 0.16em;
+  pointer-events: none;
+  stroke-dasharray: 700;
+  stroke-dashoffset: 700;
+}
+.cta-card.reveal.in .ct-swash {
+  animation: swash-draw 1.5s 0.4s cubic-bezier(.6,.05,.2,1) forwards;
+}
+@keyframes swash-draw {
+  to { stroke-dashoffset: 0; }
+}
+
 .cta-sub {
-  font-size: clamp(14px, 1.3vw, 16px);
-  color: var(--t2);
-  line-height: 1.7;
-  max-width: 480px;
-  margin: 0 auto 36px;
   position: relative;
+  z-index: 1;
+  font-size: clamp(15px, 1.35vw, 17.5px);
+  color: rgba(250,250,250,0.66);
+  line-height: 1.65;
+  max-width: 540px;
+  margin: 0 auto 38px;
+  font-weight: 400;
 }
+
+/* Conversion CTA */
 .btn-cta-main {
-  background: var(--gold);
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #4865e1;
   color: #ffffff;
   border: none;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  padding: 16px 36px;
+  padding: 17px 28px 17px 32px;
   border-radius: 100px;
-  transition: opacity .2s, transform .2s;
-  position: relative;
+  letter-spacing: -0.01em;
+  transition: opacity 0.2s, transform 0.2s;
 }
-.btn-cta-main:hover { opacity: 0.88; transform: translateY(-2px); }
+.btn-cta-main:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+.cb-arrow { display: inline-flex; }
+
+/* Microcopy with checkmarks — stacked below button */
 .cta-note {
-  font-size: 12px;
-  color: var(--t3);
-  margin-top: 16px;
   position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  margin-top: 22px;
+  font-size: 12.5px;
+  color: rgba(250,250,250,0.62);
+  letter-spacing: -0.005em;
 }
+.cn-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.cn-dot {
+  color: rgba(250,250,250,0.25);
+  font-weight: 700;
+}
+
+/* RTL */
+[dir="rtl"] .ct-swash { transform: scaleX(-1); }
 
 /* ── FOOTER ────────────────────────────────────────────────────────── */
 .footer {
@@ -2323,7 +2489,7 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
   margin-bottom: 48px;
 }
 .footer-brand { flex: 1; }
-.footer-tagline { font-size: 13px; color: var(--t3); line-height: 1.6; max-width: 240px; margin-top: 12px; }
+.footer-tagline { font-size: 13px; color: var(--t3); line-height: 1.6; max-width: 300px; margin-top: 12px; }
 .footer-cols {
   display: flex;
   gap: 60px;
@@ -2382,7 +2548,6 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
   .qr-layout { grid-template-columns: 1fr; }
   .qr-visual { order: -1; }
   .multi-layout { grid-template-columns: 1fr; }
-  .analytics-grid { grid-template-columns: 1fr 1fr; }
   .how-steps { flex-direction: column; }
   .how-arrow { display: none; }
   .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
@@ -2395,7 +2560,6 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
 
 @media (max-width: 640px) {
   .feat-grid { grid-template-columns: 1fr; }
-  .analytics-grid { grid-template-columns: 1fr; }
   .footer-cols { flex-direction: column; gap: 24px; }
   .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
   .dash-metrics { grid-template-columns: 1fr; gap: 12px; }

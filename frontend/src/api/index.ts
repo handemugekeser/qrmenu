@@ -96,9 +96,29 @@ export const qrApi = {
 }
 
 // ─── Analytics ───────────────────────────────────────────────
+export type AnalyticsEventType =
+  | 'SCAN_OPEN'
+  | 'CATEGORY_VIEW'
+  | 'ITEM_VIEW'
+  | 'LANGUAGE_CHANGE'
+  | 'SESSION_END'
+
+export interface AnalyticsEventPayload {
+  businessId: string
+  menuId?: string
+  type: AnalyticsEventType
+  itemId?: string
+  categoryId?: string
+  language?: string
+  sessionId: string
+  tableNumber?: string
+  metadata?: Record<string, any>
+}
+
 export const analyticsApi = {
   menu: (menuId: string) => api.get(`/analytics/menu/${menuId}`),
   business: (businessId: string) => api.get(`/analytics/business/${businessId}`),
+  event: (payload: AnalyticsEventPayload) => api.post('/analytics/event', payload),
 }
 
 // ─── Subscriptions ───────────────────────────────────────────

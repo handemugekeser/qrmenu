@@ -343,7 +343,22 @@ const vClickOutside = {
   unmounted(el: HTMLElement) { document.removeEventListener('click', el._clickOutside) },
 }
 import { useRoute } from 'vue-router'
-import { publicApi } from '@/api'
+import { publicApi, analyticsApi, type AnalyticsEventPayload, type AnalyticsEventType } from '@/api'
+
+const SESSION_KEY = 'qrmenu_session_id'
+function getSessionId(): string {
+  try {
+    let id = sessionStorage.getItem(SESSION_KEY)
+    if (!id) {
+      id = (crypto as any).randomUUID?.() ?? `s_${Date.now()}_${Math.random().toString(36).slice(2)}`
+      sessionStorage.setItem(SESSION_KEY, id)
+    }
+    return id
+  } catch {
+    return `s_${Date.now()}_${Math.random().toString(36).slice(2)}`
+  }
+}
+const sessionId = getSessionId()
 
 const ALLERGEN_MAP: Record<string, { emoji: string; label: string }> = {
   GLUTEN:    { emoji: '🌾', label: 'Gluten' },
@@ -458,11 +473,50 @@ const totalPrice = computed(() => {
 function getAllergenEmoji(id: string) { return ALLERGEN_MAP[id]?.emoji ?? '⚠️' }
 function getAllergenLabel(id: string) { return ALLERGEN_MAP[id]?.label ?? id }
 
+const scanTracked = ref(false)
+
+function buildEvent(type: AnalyticsEventType, extra: Partial<AnalyticsEventPayload> = {}): AnalyticsEventPayload | null {
+  const businessId = data.value?.menu?.businessId
+  if (!businessId) return null
+  return {
+    businessId,
+    menuId: data.value?.menu?.id,
+    type,
+    language: currentLang.value,
+    sessionId,
+    tableNumber: tableNumber.value ? String(tableNumber.value) : undefined,
+    ...extra,
+  }
+}
+
+function trackEvent(type: AnalyticsEventType, extra: Partial<AnalyticsEventPayload> = {}) {
+  const payload = buildEvent(type, extra)
+  if (!payload) return
+  analyticsApi.event(payload).catch(() => {})
+}
+
+function trackSessionEnd() {
+  const payload = buildEvent('SESSION_END')
+  if (!payload) return
+  try {
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+    if (!navigator.sendBeacon('/api/analytics/event', blob)) {
+      analyticsApi.event(payload).catch(() => {})
+    }
+  } catch {
+    analyticsApi.event(payload).catch(() => {})
+  }
+}
+
 onMounted(() => {
   loadMenu()
   window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('beforeunload', trackSessionEnd)
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('beforeunload', trackSessionEnd)
+})
 
 function onScroll() {
   const cats = activeCategories.value
@@ -487,12 +541,18 @@ async function loadMenu() {
     )
     data.value = res
     if (activeCategories.value.length) activeCat.value = activeCategories.value[0].id
+    if (!scanTracked.value) {
+      scanTracked.value = true
+      trackEvent('SCAN_OPEN')
+    }
   } catch { data.value = null }
   finally { loading.value = false }
 }
 
 async function switchLang(lang: string) {
+  const prev = currentLang.value
   currentLang.value = lang
+  trackEvent('LANGUAGE_CHANGE', { metadata: { from: prev, to: lang } })
   await loadMenu()
 }
 
@@ -501,6 +561,7 @@ function openProduct(prod: any) {
   selVariant.value = prod.variants?.find((v: any) => v.isDefault) || prod.variants?.[0] || null
   selExtras.value  = []
   document.body.style.overflow = 'hidden'
+  trackEvent('ITEM_VIEW', { itemId: prod.id, categoryId: prod.categoryId })
 }
 
 function closeSheet() {
@@ -516,6 +577,7 @@ function toggleExtra(id: string) {
 
 function scrollTo(id: string) {
   activeCat.value = id
+  trackEvent('CATEGORY_VIEW', { categoryId: id })
   const el = document.getElementById(`cat-${id}`)
   if (!el) return
   const navH = navRef.value?.offsetHeight ?? 56

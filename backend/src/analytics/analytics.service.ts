@@ -2,10 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DeviceType } from '@prisma/client';
 import { Request } from 'express';
+import { TrackEventDto } from './dto/track-event.dto';
 
 @Injectable()
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
+
+  async recordEvent(dto: TrackEventDto, userAgent?: string) {
+    return this.prisma.analyticsEvent.create({
+      data: {
+        businessId: dto.businessId,
+        menuId: dto.menuId,
+        type: dto.type,
+        itemId: dto.itemId,
+        categoryId: dto.categoryId,
+        language: dto.language,
+        sessionId: dto.sessionId,
+        tableNumber: dto.tableNumber,
+        userAgent,
+        metadata: dto.metadata as any,
+      },
+    });
+  }
 
   async track(menuId: string, req: Request, tableNumber?: number) {
     const userAgent = req.headers['user-agent'] || '';

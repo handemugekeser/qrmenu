@@ -20,5 +20,6 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "prisma/**/*"]
+  "include": ["src/**/*", "prisma/**/*"],
+  "exclude": ["**/__tests__/**", "**/*.spec.ts", "**/*.test.ts"]
 }
