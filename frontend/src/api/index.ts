@@ -147,4 +147,67 @@ export const publicApi = {
     api.get(`/public/menu/${slug}`, { params: { lang, table, menuId } }),
 }
 
+// ─── Insights ────────────────────────────────────────────────
+export type InsightSeverity = 'INFO' | 'SUGGESTION' | 'IMPORTANT'
+export type InsightStatus = 'NEW' | 'VIEWED' | 'APPLIED' | 'DISMISSED'
+export type InsightStatusFilter = 'new' | 'viewed' | 'applied' | 'dismissed' | 'all'
+
+export interface Insight {
+  id: string
+  businessId: string
+  ruleId: string
+  severity: InsightSeverity
+  title: string
+  body: string
+  rawData: Record<string, any>
+  actionType: string | null
+  actionData: Record<string, any> | null
+  status: InsightStatus
+  weekOf: string
+  createdAt: string
+}
+
+export interface InsightListResponse {
+  items: Insight[]
+  counts: { new: number; viewed: number; applied: number; dismissed: number }
+}
+
+export const insightsApi = {
+  list: (status: InsightStatusFilter = 'new') =>
+    api.get<InsightListResponse>('/insights', { params: { status } }),
+  apply: (id: string) => api.post<Insight>(`/insights/${id}/apply`),
+  dismiss: (id: string) => api.post<Insight>(`/insights/${id}/dismiss`),
+  view: (id: string) => api.get<Insight>(`/insights/${id}/view`),
+}
+
+// ─── Notifications ───────────────────────────────────────────
+export type NotificationType = 'WEEKLY_INSIGHTS_READY' | 'SYSTEM'
+
+export interface AppNotification {
+  id: string
+  userId: string
+  businessId: string | null
+  type: NotificationType
+  title: string
+  body: string
+  data: Record<string, any> | null
+  readAt: string | null
+  createdAt: string
+}
+
+export interface NotificationPreferences {
+  weeklyInsightsEmail: boolean
+  weeklyInsightsInApp: boolean
+}
+
+export const notificationsApi = {
+  list: () => api.get<AppNotification[]>('/notifications'),
+  unreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
+  markAllRead: () => api.post<{ updated: number }>('/notifications/mark-read'),
+  markRead: (id: string) => api.post<{ ok: boolean }>(`/notifications/${id}/read`),
+  getPreferences: () => api.get<NotificationPreferences>('/notifications/preferences'),
+  updatePreferences: (patch: Partial<NotificationPreferences>) =>
+    api.patch<NotificationPreferences>('/notifications/preferences', patch),
+}
+
 export default api

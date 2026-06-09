@@ -70,6 +70,21 @@
         </div>
 
         <div class="mt-3 border-t border-gray-100 pt-3 space-y-0.5">
+          <router-link
+            v-if="auth.isPro"
+            to="/app/insights"
+            class="sidebar-link"
+            :class="{ active: $route.name === 'insights' }"
+          >
+            <Sparkles :size="18" />
+            <span class="flex-1">{{ t('insights.sidebarLabel') }}</span>
+            <span
+              v-if="insightsStore.newCount > 0"
+              class="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] h-[18px] inline-flex items-center justify-center px-1.5"
+            >
+              {{ insightsStore.newCount }}
+            </span>
+          </router-link>
           <router-link to="/app/subscription" class="sidebar-link" :class="{ active: $route.name === 'subscription' }">
             <CreditCard :size="18" /> Abonelik
           </router-link>
@@ -108,6 +123,7 @@
         <div class="flex-1">
           <h1 class="font-semibold text-gray-900 text-sm">{{ pageTitle }}</h1>
         </div>
+        <NotificationBadge />
       </header>
 
       <!-- Content -->
@@ -121,15 +137,21 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessStore } from '@/stores/business'
+import { useInsightsStore } from '@/stores/insights'
+import { useNotificationsStore } from '@/stores/notifications'
+import NotificationBadge from '@/components/NotificationBadge.vue'
 import {
   LayoutDashboard, Building2, UtensilsCrossed, QrCode, BarChart3,
-  Settings, CreditCard, LogOut, Menu, List, ChevronDown
+  Settings, CreditCard, LogOut, Menu, List, ChevronDown, Sparkles
 } from 'lucide-vue-next'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const businessStore = useBusinessStore()
+const insightsStore = useInsightsStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -176,5 +198,11 @@ watch(() => route.params.menuId, (id) => {
   if (id) expandedMenu.value = id as string
 }, { immediate: true })
 
-onMounted(() => businessStore.fetchAll())
+const notificationsStore = useNotificationsStore()
+
+onMounted(() => {
+  businessStore.fetchAll()
+  insightsStore.refreshCount()
+  notificationsStore.startPolling()
+})
 </script>

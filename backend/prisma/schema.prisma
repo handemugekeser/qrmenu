@@ -45,10 +45,15 @@ model User {
   plan         SubscriptionPlan @default(FREE)
   planExpiresAt DateTime?
   isActive     Boolean  @default(true)
+  locale       Language @default(TR)
+  timezone     String   @default("Europe/Istanbul")
+  unsubscribeToken String @unique @default(uuid())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  businesses   Business[]
+  businesses       Business[]
+  notifications    Notification[]
+  notificationPref NotificationPreference?
   @@map("users")
 }
 
@@ -314,4 +319,64 @@ model Insight {
   @@unique([businessId, ruleId, weekOf])
   @@index([businessId, status, weekOf])
   @@map("insights")
+}
+
+model InsightCache {
+  key       String   @id
+  ruleId    String
+  title     String
+  body      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("insight_cache")
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────
+
+enum NotificationType {
+  WEEKLY_INSIGHTS_READY
+  SYSTEM
+}
+
+enum NotificationChannelStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  businessId String?
+  type       NotificationType
+  title      String
+  body       String
+  data       Json?
+  readAt     DateTime?
+  emailStatus NotificationChannelStatus @default(PENDING)
+  emailError String?
+  createdAt  DateTime         @default(now())
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  weeklyInsightsEmail  Boolean  @default(true)
+  weeklyInsightsInApp  Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

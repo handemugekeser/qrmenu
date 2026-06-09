@@ -49,6 +49,12 @@ const faqOpen = ref<boolean[]>([false, false, false, false, false, false, false]
 const toggleFaq = (i: number) => { faqOpen.value[i] = !faqOpen.value[i] }
 const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string }>)
 
+const billingAnnual = ref(true)
+const freePrice = computed(() => t(billingAnnual.value ? 'pricing.free.priceAnnual' : 'pricing.free.priceMonthly'))
+const proPrice = computed(() => t(billingAnnual.value ? 'pricing.pro.priceAnnual' : 'pricing.pro.priceMonthly'))
+const premiumPrice = computed(() => t(billingAnnual.value ? 'pricing.premium.priceAnnual' : 'pricing.premium.priceMonthly'))
+const billedNote = computed(() => t(billingAnnual.value ? 'pricing.billedAnnually' : 'pricing.billedMonthly'))
+
 </script>
 
 <template>
@@ -705,10 +711,32 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
           <h2 class="sec-title">{{ t('pricing.title') }}</h2>
           <p class="sec-sub">{{ t('pricing.sub') }}</p>
         </div>
+
+        <div class="billing-toggle reveal" role="tablist" aria-label="Billing cycle">
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="!billingAnnual"
+            :class="['bt-opt', { active: !billingAnnual }]"
+            @click="billingAnnual = false"
+          >{{ t('pricing.billingMonthly') }}</button>
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="billingAnnual"
+            :class="['bt-opt', { active: billingAnnual }]"
+            @click="billingAnnual = true"
+          >
+            {{ t('pricing.billingAnnual') }}
+            <span class="bt-save">{{ t('pricing.saveBadge') }}</span>
+          </button>
+        </div>
+
         <div class="pricing-grid">
           <div class="price-card reveal">
             <div class="plan-name">{{ t('pricing.free.name') }}</div>
-            <div class="plan-price"><strong>{{ t('pricing.free.price') }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-price"><strong>{{ freePrice }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-billed">{{ billedNote }}</div>
             <div class="plan-desc">{{ t('pricing.free.desc') }}</div>
             <ul class="plan-feats">
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.free.f1') }}</li>
@@ -722,7 +750,8 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
           <div class="price-card featured reveal">
             <div class="plan-badge">{{ t('pricing.mostPopular') }}</div>
             <div class="plan-name">{{ t('pricing.pro.name') }}</div>
-            <div class="plan-price"><strong>{{ t('pricing.pro.price') }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-price"><strong>{{ proPrice }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-billed">{{ billedNote }}</div>
             <div class="plan-desc">{{ t('pricing.pro.desc') }}</div>
             <ul class="plan-feats">
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.pro.f1') }}</li>
@@ -736,7 +765,8 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
           </div>
           <div class="price-card reveal">
             <div class="plan-name">{{ t('pricing.premium.name') }}</div>
-            <div class="plan-price"><strong>{{ t('pricing.premium.price') }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-price"><strong>{{ premiumPrice }}</strong><span>{{ t('pricing.perMonth') }}</span></div>
+            <div class="plan-billed">{{ billedNote }}</div>
             <div class="plan-desc">{{ t('pricing.premium.desc') }}</div>
             <ul class="plan-feats">
               <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{ t('pricing.premium.f1') }}</li>
@@ -821,24 +851,6 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
           </button>
-
-          <!-- Trust microcopy -->
-          <div class="cta-note">
-            <span class="cn-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5ee7b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ t('cta.micro1') }}
-            </span>
-            <span class="cn-dot">·</span>
-            <span class="cn-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5ee7b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ t('cta.micro2') }}
-            </span>
-            <span class="cn-dot">·</span>
-            <span class="cn-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5ee7b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ t('cta.micro3') }}
-            </span>
-          </div>
         </div>
       </div>
     </section>
@@ -1408,10 +1420,10 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
 .phone-screen { flex: 1; }
 .phone-island {
   width: 100px;
-  height: 28px;
+  height: 13px;
   background: #1a1a1a;
   border-radius: 20px;
-  margin: 4px auto 12px;
+  margin: 4px auto 22px;
 }
 .phone-screen { padding: 0 14px; }
 .phone-bar {
@@ -2126,6 +2138,50 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
 
 /* ── PRICING ───────────────────────────────────────────────────────── */
 .pricing-section { background: var(--sur); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.billing-toggle {
+  display: flex;
+  width: fit-content;
+  margin: 0 auto 36px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.bt-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--t2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 9px 18px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+.bt-opt:hover { color: var(--t1); }
+.bt-opt.active {
+  background: var(--sur);
+  color: var(--t1);
+  box-shadow: 0 1px 2px rgba(13,27,62,0.06), 0 4px 12px rgba(59,91,219,0.10);
+}
+.bt-save {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-dim);
+  border-radius: 100px;
+  padding: 3px 7px;
+  line-height: 1;
+}
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2181,6 +2237,7 @@ const faqItems = computed(() => tm('faq.items') as Array<{ q: string; a: string 
   letter-spacing: -0.04em;
 }
 .plan-price span { font-size: 14px; color: var(--t3); }
+.plan-billed { font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--t3); margin: -4px 0 14px; }
 .plan-desc { font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
 .plan-feats {
   list-style: none;

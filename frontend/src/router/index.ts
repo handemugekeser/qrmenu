@@ -80,6 +80,12 @@ const router = createRouter({
           name: 'subscription',
           component: () => import('@/views/settings/SubscriptionView.vue'),
         },
+        {
+          path: 'insights',
+          name: 'insights',
+          component: () => import('@/views/dashboard/InsightsView.vue'),
+          meta: { requiresAuth: true, requiresPlan: ['PRO', 'PREMIUM'] },
+        },
       ],
     },
 

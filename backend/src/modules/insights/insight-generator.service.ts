@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { AnalyticsEventType, Prisma } from '@prisma/client';
+import { AnalyticsEventType, InsightSeverity, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { LlmInsightService } from './llm';
 import { ALL_RULES } from './rules';
 import {
   EventAggregates,
@@ -12,6 +14,12 @@ import {
   RuleContext,
 } from './types';
 import { buildWeeklySnapshots, startOfIsoWeek } from './weekly-aggregator';
+
+const SEVERITY_RANK: Record<InsightSeverity, number> = {
+  IMPORTANT: 3,
+  SUGGESTION: 2,
+  INFO: 1,
+};
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const DAILY_LOOKBACK_DAYS = 7;
@@ -23,7 +31,9 @@ export class InsightGeneratorService {
 
   constructor(
     private prisma: PrismaService,
-    private rules: InsightRule[] = ALL_RULES,
+    private llm: LlmInsightService,
+    @Optional() private notifications: NotificationsService | null = null,
+    @Optional() private rules: InsightRule[] = ALL_RULES,
   ) {}
 
   @Cron('0 2 * * 1')
@@ -39,7 +49,11 @@ export class InsightGeneratorService {
     let total = 0;
     for (const { id } of businesses) {
       try {
-        total += await this.generateForBusiness(id, weekOf, now);
+        const written = await this.generateForBusiness(id, weekOf, now);
+        total += written;
+        if (written > 0) {
+          await this.fireNotification(id, weekOf);
+        }
       } catch (err) {
         this.logger.error(`Insight generation failed for ${id}: ${(err as Error).message}`);
       }
@@ -59,6 +73,31 @@ export class InsightGeneratorService {
       if (saved) written++;
     }
     return written;
+  }
+
+  private async fireNotification(businessId: string, weekOf: Date) {
+    if (!this.notifications) return;
+    const fresh = await this.prisma.insight.findMany({
+      where: { businessId, weekOf },
+      select: { title: true, body: true, severity: true, createdAt: true },
+    });
+    if (fresh.length === 0) return;
+
+    const top = [...fresh].sort((a, b) => {
+      const diff = SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity];
+      if (diff !== 0) return diff;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    })[0];
+
+    try {
+      await this.notifications.sendWeeklyInsightsReady({
+        businessId,
+        count: fresh.length,
+        topInsight: { title: top.title, body: top.body },
+      });
+    } catch (err) {
+      this.logger.error(`notify failed for ${businessId}: ${(err as Error).message}`);
+    }
   }
 
   private async buildContext(businessId: string, now: Date): Promise<RuleContext | null> {
@@ -189,13 +228,18 @@ export class InsightGeneratorService {
     weekOf: Date,
     candidate: InsightCandidate,
   ): Promise<boolean> {
+    const generated = await this.llm.generateOrPlaceholder(
+      candidate.ruleId,
+      candidate.rawData,
+    );
+
     const data = {
       businessId,
       weekOf,
       ruleId: candidate.ruleId,
       severity: candidate.severity,
-      title: `[${candidate.ruleId}] Test öneri`,
-      body: JSON.stringify(candidate.rawData),
+      title: generated.title,
+      body: generated.body,
       rawData: candidate.rawData as unknown as Prisma.InputJsonValue,
       actionType: candidate.actionType ?? null,
       actionData: candidate.actionData
