@@ -1,225 +1,187 @@
-import { PrismaClient, SubscriptionPlan, Language } from '@prisma/client';
+import { PrismaClient, SubscriptionPlan, Language, UserRole, DeviceType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { seedContent } from './seed-content';
 
 const prisma = new PrismaClient();
 
+const SUPER_ADMIN_EMAIL = 'hasan.siwi@gmail.com';
+
+const DUMMY_USERS: Array<{
+  email: string;
+  name: string;
+  plan: SubscriptionPlan;
+  businesses: Array<{ name: string; slug: string; menus: string[] }>;
+}> = [
+  { email: 'mehmet@kebapci.com', name: 'Mehmet Yılmaz', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Kebapçı Mehmet', slug: 'kebapci-mehmet', menus: ['Ana Menü', 'Kahvaltı'] },
+  ]},
+  { email: 'ayse@cafenoir.com', name: 'Ayşe Demir', plan: SubscriptionPlan.PREMIUM, businesses: [
+    { name: 'Cafe Noir', slug: 'cafe-noir', menus: ['Kahve & Tatlı', 'Atıştırmalık'] },
+    { name: 'Cafe Noir Beşiktaş', slug: 'cafe-noir-besiktas', menus: ['Şube Menü'] },
+  ]},
+  { email: 'osman@pideci.com', name: 'Osman Kaya', plan: SubscriptionPlan.FREE, businesses: [
+    { name: 'Pideci Osman', slug: 'pideci-osman', menus: ['Pide & Lahmacun'] },
+  ]},
+  { email: 'fatma@balikci.com', name: 'Fatma Şahin', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Balıkçı Fatma', slug: 'balikci-fatma', menus: ['Mevsim Menüsü'] },
+  ]},
+  { email: 'ali@pizzapoint.com', name: 'Ali Çelik', plan: SubscriptionPlan.PREMIUM, businesses: [
+    { name: 'Pizza Point', slug: 'pizza-point', menus: ['Pizza', 'İçecek'] },
+    { name: 'Pizza Point Express', slug: 'pizza-point-express', menus: ['Hızlı Menü'] },
+    { name: 'Pizza Point Kadıköy', slug: 'pizza-point-kadikoy', menus: ['Kadıköy Şube'] },
+  ]},
+  { email: 'zeynep@brunchhouse.com', name: 'Zeynep Aksoy', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Brunch House', slug: 'brunch-house', menus: ['Brunch', 'Tatlı'] },
+  ]},
+  { email: 'emre@burgershop.com', name: 'Emre Yıldız', plan: SubscriptionPlan.FREE, businesses: [
+    { name: 'Burger Shop', slug: 'burger-shop', menus: ['Burger'] },
+  ]},
+  { email: 'selin@kasapdoner.com', name: 'Selin Arslan', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Kasap Döner', slug: 'kasap-doner', menus: ['Döner & Lahmacun'] },
+  ]},
+  { email: 'baris@steakhouse.com', name: 'Barış Doğan', plan: SubscriptionPlan.PREMIUM, businesses: [
+    { name: 'Premium Steakhouse', slug: 'premium-steakhouse', menus: ['Et', 'Şarap'] },
+  ]},
+  { email: 'gizem@sushibar.com', name: 'Gizem Polat', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Sushi Bar Tokyo', slug: 'sushi-bar-tokyo', menus: ['Sushi & Sashimi'] },
+  ]},
+  { email: 'kerem@meyhane.com', name: 'Kerem Acar', plan: SubscriptionPlan.FREE, businesses: [
+    { name: 'Klasik Meyhane', slug: 'klasik-meyhane', menus: ['Rakı Sofrası'] },
+  ]},
+  { email: 'ipek@kahvaltici.com', name: 'İpek Tan', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Köy Kahvaltısı', slug: 'koy-kahvaltisi', menus: ['Serpme Kahvaltı'] },
+  ]},
+  { email: 'tolga@dondurma.com', name: 'Tolga Erdem', plan: SubscriptionPlan.FREE, businesses: [
+    { name: 'Dondurma Dükkanı', slug: 'dondurma-dukkani', menus: ['Çeşitler'] },
+  ]},
+  { email: 'esra@vejetaryen.com', name: 'Esra Koç', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Yeşil Mutfak', slug: 'yesil-mutfak', menus: ['Vejetaryen', 'Vegan'] },
+  ]},
+  { email: 'mert@pubgrill.com', name: 'Mert Şen', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Pub & Grill', slug: 'pub-grill', menus: ['Bira & Atıştırmalık'] },
+  ]},
+  { email: 'deniz@cafebreeze.com', name: 'Deniz Kara', plan: SubscriptionPlan.FREE, businesses: [
+    { name: 'Cafe Breeze', slug: 'cafe-breeze', menus: ['Kahve'] },
+  ]},
+  { email: 'yusuf@lokanta.com', name: 'Yusuf Erol', plan: SubscriptionPlan.PRO, businesses: [
+    { name: 'Lokanta Klasik', slug: 'lokanta-klasik', menus: ['Ev Yemekleri'] },
+  ]},
+  { email: 'melisa@waffle.com', name: 'Melisa Uçar', plan: SubscriptionPlan.FREE, businesses: [
+    { name: 'Waffle Stop', slug: 'waffle-stop', menus: ['Waffle Çeşitleri'] },
+  ]},
+];
+
+const THEMES = ['#FF6B35', '#3b5bdb', '#768dfb', '#10b981', '#a855f7', '#f59e0b'];
+
 async function main() {
   console.log('🌱 Seeding database...');
+  const password = await bcrypt.hash('password123', 10);
 
-  // Create demo user
-  const hashedPassword = await bcrypt.hash('password123', 10);
-  const user = await prisma.user.upsert({
+  // Demo user (PREMIUM — owns the 4 rich businesses)
+  const demo = await prisma.user.upsert({
     where: { email: 'demo@qrmenu.app' },
-    update: {},
+    update: { role: UserRole.USER, plan: SubscriptionPlan.PREMIUM },
     create: {
       email: 'demo@qrmenu.app',
-      password: hashedPassword,
+      password,
       name: 'Demo Restaurant',
-      plan: SubscriptionPlan.PRO,
+      plan: SubscriptionPlan.PREMIUM,
+      role: UserRole.USER,
     },
   });
 
-  // Create business
-  const business = await prisma.business.upsert({
-    where: { slug: 'demo-restaurant' },
-    update: {},
+  // Super admin
+  await prisma.user.upsert({
+    where: { email: SUPER_ADMIN_EMAIL },
+    update: { role: UserRole.SUPER_ADMIN, plan: SubscriptionPlan.PREMIUM },
     create: {
-      userId: user.id,
-      name: 'Demo Restaurant',
-      slug: 'demo-restaurant',
-      description: 'A wonderful dining experience',
-      phone: '+90 212 555 0100',
-      address: 'Bağcılar, Istanbul',
-      currency: 'TRY',
-      defaultLang: Language.TR,
+      email: SUPER_ADMIN_EMAIL,
+      password,
+      name: 'Hasan (menusflow)',
+      plan: SubscriptionPlan.PREMIUM,
+      role: UserRole.SUPER_ADMIN,
     },
   });
 
-  // Create menu
-  const menu = await prisma.menu.create({
-    data: {
-      businessId: business.id,
-      name: 'Ana Menü',
-      description: 'Our main menu',
-      isActive: true,
-      isDefault: true,
-      themeColor: '#FF6B35',
-    },
-  });
+  // Remove legacy "Demo Restaurant" business — we replace it with 4 rich businesses below
+  await prisma.business.deleteMany({ where: { slug: 'demo-restaurant' } });
 
-  // Create categories
-  const categories = await Promise.all([
-    prisma.category.create({
-      data: {
-        menuId: menu.id,
-        name: 'Başlangıçlar',
-        description: 'Starters & Appetizers',
-        sortOrder: 1,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        menuId: menu.id,
-        name: 'Ana Yemekler',
-        description: 'Main Courses',
-        sortOrder: 2,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        menuId: menu.id,
-        name: 'İçecekler',
-        description: 'Beverages',
-        sortOrder: 3,
-      },
-    }),
-    prisma.category.create({
-      data: {
-        menuId: menu.id,
-        name: 'Tatlılar',
-        description: 'Desserts',
-        sortOrder: 4,
-      },
-    }),
-  ]);
-
-  // Products for starters
-  const hummus = await prisma.product.create({
-    data: {
-      categoryId: categories[0].id,
-      name: 'Humus',
-      description: 'Nohut püresi, tahin, zeytinyağı ile',
-      basePrice: 85.00,
-      isAvailable: true,
-      isPopular: true,
-      sortOrder: 1,
-    },
-  });
-
-  await prisma.product.create({
-    data: {
-      categoryId: categories[0].id,
-      name: 'Çoban Salatası',
-      description: 'Taze domates, salatalık, soğan',
-      basePrice: 65.00,
-      isAvailable: true,
-      sortOrder: 2,
-    },
-  });
-
-  // Products for main courses
-  const adana = await prisma.product.create({
-    data: {
-      categoryId: categories[1].id,
-      name: 'Adana Kebap',
-      description: 'Acılı kıyma kebabı, lavaş ekmeği ile',
-      basePrice: 220.00,
-      isAvailable: true,
-      isPopular: true,
-      sortOrder: 1,
-    },
-  });
-
-  await prisma.product.create({
-    data: {
-      categoryId: categories[1].id,
-      name: 'Izgara Tavuk',
-      description: 'Marine edilmiş tavuk göğsü, sebzeler ile',
-      basePrice: 180.00,
-      isAvailable: true,
-      sortOrder: 2,
-    },
-  });
-
-  // Variants for Adana
-  await prisma.variant.createMany({
-    data: [
-      { productId: adana.id, name: 'Tek', price: 220.00, isDefault: true, sortOrder: 1 },
-      { productId: adana.id, name: 'Çift', price: 380.00, sortOrder: 2 },
-      { productId: adana.id, name: 'Karışık', price: 260.00, sortOrder: 3 },
-    ],
-  });
-
-  // Extras for Hummus
-  await prisma.extra.createMany({
-    data: [
-      { productId: hummus.id, name: 'Ekstra Ekmek', price: 15.00, sortOrder: 1 },
-      { productId: hummus.id, name: 'Acı Sos', price: 10.00, sortOrder: 2 },
-      { productId: hummus.id, name: 'Zeytinyağı +', price: 5.00, sortOrder: 3 },
-    ],
-  });
-
-  // Beverages
-  const ayran = await prisma.product.create({
-    data: {
-      categoryId: categories[2].id,
-      name: 'Ayran',
-      description: 'Ev yapımı taze ayran',
-      basePrice: 25.00,
-      isAvailable: true,
-      sortOrder: 1,
-    },
-  });
-
-  await prisma.variant.createMany({
-    data: [
-      { productId: ayran.id, name: 'Küçük (250ml)', price: 25.00, isDefault: true, sortOrder: 1 },
-      { productId: ayran.id, name: 'Büyük (500ml)', price: 40.00, sortOrder: 2 },
-    ],
-  });
-
-  await prisma.product.create({
-    data: {
-      categoryId: categories[2].id,
-      name: 'Türk Çayı',
-      description: 'Demlik çay',
-      basePrice: 20.00,
-      isAvailable: true,
-      sortOrder: 2,
-    },
-  });
-
-  // Desserts
-  await prisma.product.create({
-    data: {
-      categoryId: categories[3].id,
-      name: 'Baklava',
-      description: 'Antep fıstıklı geleneksel baklava',
-      basePrice: 120.00,
-      isAvailable: true,
-      isPopular: true,
-      sortOrder: 1,
-    },
-  });
-
-  // Translations (EN)
-  await prisma.translation.createMany({
-    data: [
-      { entityType: 'category', entityId: categories[0].id, categoryId: categories[0].id, language: Language.EN, field: 'name', value: 'Starters' },
-      { entityType: 'category', entityId: categories[1].id, categoryId: categories[1].id, language: Language.EN, field: 'name', value: 'Main Courses' },
-      { entityType: 'category', entityId: categories[2].id, categoryId: categories[2].id, language: Language.EN, field: 'name', value: 'Beverages' },
-      { entityType: 'category', entityId: categories[3].id, categoryId: categories[3].id, language: Language.EN, field: 'name', value: 'Desserts' },
-      { entityType: 'product', entityId: hummus.id, productId: hummus.id, language: Language.EN, field: 'name', value: 'Hummus' },
-      { entityType: 'product', entityId: hummus.id, productId: hummus.id, language: Language.EN, field: 'description', value: 'Chickpea puree with tahini and olive oil' },
-    ],
-  });
-
-  // Sample analytics
-  const deviceTypes = ['MOBILE', 'TABLET', 'DESKTOP'] as const;
-  for (let i = 0; i < 30; i++) {
-    await prisma.analytics.create({
-      data: {
-        menuId: menu.id,
-        deviceType: deviceTypes[i % 3],
-        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+  // Dummy users
+  for (let i = 0; i < DUMMY_USERS.length; i++) {
+    const u = DUMMY_USERS[i];
+    const createdAt = new Date(Date.now() - (i + 1) * 3 * 24 * 60 * 60 * 1000); // staggered
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { plan: u.plan, role: UserRole.USER },
+      create: {
+        email: u.email,
+        password,
+        name: u.name,
+        plan: u.plan,
+        role: UserRole.USER,
+        createdAt,
       },
     });
+
+    for (const biz of u.businesses) {
+      const business = await prisma.business.upsert({
+        where: { slug: biz.slug },
+        update: {},
+        create: {
+          userId: user.id,
+          name: biz.name,
+          slug: biz.slug,
+          currency: 'TRY',
+          defaultLang: Language.TR,
+          phone: `+90 5${30 + (i % 60)} ${String(100 + i).padStart(3, '0')} ${String(1000 + i * 7).slice(-4)} `.trim(),
+        },
+      });
+
+      for (let mi = 0; mi < biz.menus.length; mi++) {
+        const existing = await prisma.menu.findFirst({
+          where: { businessId: business.id, name: biz.menus[mi] },
+        });
+        if (existing) continue;
+        const menu = await prisma.menu.create({
+          data: {
+            businessId: business.id,
+            name: biz.menus[mi],
+            isActive: true,
+            isDefault: mi === 0,
+            themeColor: THEMES[(i + mi) % THEMES.length],
+          },
+        });
+
+        // Sprinkle some analytics so dashboards show data
+        const devices: DeviceType[] = [DeviceType.MOBILE, DeviceType.TABLET, DeviceType.DESKTOP];
+        const events = 5 + ((i * 3 + mi) % 20);
+        const analyticsData = Array.from({ length: events }).map((_, k) => ({
+          menuId: menu.id,
+          deviceType: devices[k % 3],
+          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+        }));
+        await prisma.analytics.createMany({ data: analyticsData });
+      }
+    }
   }
 
-  console.log('✅ Seed complete!');
-  console.log('📧 Email: demo@qrmenu.app');
-  console.log('🔑 Password: password123');
-  console.log(`🔗 Public menu: /menu/demo-restaurant`);
+  // Reassign 4 rich businesses to demo (so demo sees them on login)
+  const RICH_SLUGS = ['kebapci-mehmet', 'cafe-noir', 'pizza-point', 'sushi-bar-tokyo'];
+  for (const slug of RICH_SLUGS) {
+    await prisma.business.updateMany({
+      where: { slug },
+      data: { userId: demo.id },
+    });
+  }
+  console.log(`\n🔄 Reassigned ${RICH_SLUGS.length} rich businesses to demo@qrmenu.app`);
+
+  // Rich QR-menu content for 4 distinct business types
+  await seedContent(prisma);
+
+  console.log('\n✅ Seed complete!');
+  console.log(`📧 Demo: demo@qrmenu.app / password123`);
+  console.log(`👑 Super Admin: ${SUPER_ADMIN_EMAIL} / password123`);
+  console.log(`👥 ${DUMMY_USERS.length} dummy users with businesses & menus seeded.`);
 }
 
 main()

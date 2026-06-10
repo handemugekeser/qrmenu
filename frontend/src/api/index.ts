@@ -210,4 +210,113 @@ export const notificationsApi = {
     api.patch<NotificationPreferences>('/notifications/preferences', patch),
 }
 
+// ─── Admin ───────────────────────────────────────────────────
+export type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+export type Plan = 'FREE' | 'PRO' | 'PREMIUM'
+
+export interface AdminStats {
+  totalUsers: number
+  totalBusinesses: number
+  totalMenus: number
+  totalScans: number
+  todayScans: number
+  newUsers7d: number
+  planDistribution: { FREE: number; PRO: number; PREMIUM: number }
+  recentUsers: Array<{
+    id: string
+    email: string
+    name: string
+    plan: Plan
+    role: UserRole
+    createdAt: string
+    _count: { businesses: number }
+  }>
+}
+
+export interface AdminUserListItem {
+  id: string
+  email: string
+  name: string
+  plan: Plan
+  role: UserRole
+  isActive: boolean
+  createdAt: string
+  _count: { businesses: number }
+}
+
+export interface Paginated<T> {
+  items: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface AdminUserDetail {
+  id: string
+  email: string
+  name: string
+  plan: Plan
+  role: UserRole
+  isActive: boolean
+  planExpiresAt: string | null
+  locale: string
+  createdAt: string
+  updatedAt: string
+  businesses: Array<{
+    id: string
+    name: string
+    slug: string
+    isActive: boolean
+    createdAt: string
+    _count: { menus: number }
+    menus: Array<{
+      id: string
+      name: string
+      isActive: boolean
+      themeColor: string
+      _count: { qrCodes: number; analytics: number }
+    }>
+  }>
+}
+
+export interface AdminBusinessItem {
+  id: string
+  name: string
+  slug: string
+  phone: string | null
+  isActive: boolean
+  createdAt: string
+  user: { id: string; email: string; name: string; plan: Plan }
+  _count: { menus: number }
+}
+
+export interface AdminMenuItem {
+  id: string
+  name: string
+  isActive: boolean
+  themeColor: string
+  createdAt: string
+  business: {
+    id: string
+    name: string
+    slug: string
+    user: { id: string; email: string; name: string }
+  }
+  _count: { qrCodes: number; analytics: number; categories: number }
+}
+
+export const adminApi = {
+  stats: () => api.get<AdminStats>('/admin/stats'),
+  users: (params: { search?: string; plan?: Plan; role?: UserRole; page?: number; limit?: number } = {}) =>
+    api.get<Paginated<AdminUserListItem>>('/admin/users', { params }),
+  userDetail: (id: string) => api.get<AdminUserDetail>(`/admin/users/${id}`),
+  updateUser: (id: string, data: { plan?: Plan; role?: UserRole; isActive?: boolean }) =>
+    api.patch<AdminUserListItem>(`/admin/users/${id}`, data),
+  businesses: (params: { search?: string; page?: number; limit?: number } = {}) =>
+    api.get<Paginated<AdminBusinessItem>>('/admin/businesses', { params }),
+  menus: (params: { search?: string; active?: boolean; page?: number; limit?: number } = {}) =>
+    api.get<Paginated<AdminMenuItem>>('/admin/menus', { params }),
+}
+
 export default api

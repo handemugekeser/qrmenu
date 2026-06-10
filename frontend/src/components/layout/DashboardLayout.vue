@@ -71,6 +71,15 @@
 
         <div class="mt-3 border-t border-gray-100 pt-3 space-y-0.5">
           <router-link
+            v-if="auth.isAdmin"
+            to="/admin"
+            class="sidebar-link admin-link"
+          >
+            <ShieldCheck :size="18" />
+            <span class="flex-1">Admin Paneli</span>
+            <span class="admin-badge">ADMIN</span>
+          </router-link>
+          <router-link
             v-if="auth.isPro"
             to="/app/insights"
             class="sidebar-link"
@@ -145,7 +154,7 @@ import { useNotificationsStore } from '@/stores/notifications'
 import NotificationBadge from '@/components/NotificationBadge.vue'
 import {
   LayoutDashboard, Building2, UtensilsCrossed, QrCode, BarChart3,
-  Settings, CreditCard, LogOut, Menu, List, ChevronDown, Sparkles
+  Settings, CreditCard, LogOut, Menu, List, ChevronDown, Sparkles, ShieldCheck
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -206,3 +215,21 @@ onMounted(() => {
   notificationsStore.startPolling()
 })
 </script>
+
+<style scoped>
+.admin-link {
+  background: linear-gradient(135deg, rgba(13,27,62,0.06), rgba(59,91,219,0.06));
+}
+.admin-link:hover {
+  background: linear-gradient(135deg, rgba(13,27,62,0.10), rgba(59,91,219,0.10));
+}
+.admin-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  background: #0d1b3e;
+  color: #fff;
+  padding: 3px 7px;
+  border-radius: 100px;
+}
+</style>

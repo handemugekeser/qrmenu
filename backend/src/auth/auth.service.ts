@@ -22,7 +22,7 @@ export class AuthService {
         email: dto.email,
         password: hashed,
       },
-      select: { id: true, email: true, name: true, plan: true },
+      select: { id: true, email: true, name: true, role: true, plan: true },
     });
 
     const token = this.signToken(user.id, user.email);
@@ -50,6 +50,7 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        role: true,
         plan: true,
         planExpiresAt: true,
         createdAt: true,

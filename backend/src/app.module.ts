@@ -20,6 +20,7 @@ import { SubscriptionModule } from './subscriptions/subscription.module';
 import { UploadModule } from './upload/upload.module';
 import { InsightsModule } from './modules/insights/insights.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -44,6 +45,7 @@ import { Reflector } from '@nestjs/core';
     UploadModule,
     InsightsModule,
     NotificationsModule,
+    AdminModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

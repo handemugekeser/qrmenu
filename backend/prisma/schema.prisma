@@ -33,6 +33,12 @@ enum DeviceType {
   UNKNOWN
 }
 
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
 // ─────────────────────────────────────────
 // USERS
 // ─────────────────────────────────────────
@@ -42,6 +48,7 @@ model User {
   email        String   @unique
   password     String
   name         String
+  role         UserRole @default(USER)
   plan         SubscriptionPlan @default(FREE)
   planExpiresAt DateTime?
   isActive     Boolean  @default(true)

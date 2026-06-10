@@ -89,6 +89,40 @@ const router = createRouter({
       ],
     },
 
+    // ─── Admin (SUPER_ADMIN/ADMIN only) ──────────────────────
+    {
+      path: '/admin',
+      component: () => import('@/components/layout/AdminLayout.vue'),
+      meta: { requiresAuth: true, requiresRole: ['ADMIN', 'SUPER_ADMIN'] },
+      children: [
+        {
+          path: '',
+          name: 'admin-dashboard',
+          component: () => import('@/views/admin/AdminDashboardView.vue'),
+        },
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: () => import('@/views/admin/AdminUsersView.vue'),
+        },
+        {
+          path: 'users/:id',
+          name: 'admin-user-detail',
+          component: () => import('@/views/admin/AdminUserDetailView.vue'),
+        },
+        {
+          path: 'businesses',
+          name: 'admin-businesses',
+          component: () => import('@/views/admin/AdminBusinessesView.vue'),
+        },
+        {
+          path: 'menus',
+          name: 'admin-menus',
+          component: () => import('@/views/admin/AdminMenusView.vue'),
+        },
+      ],
+    },
+
     // ─── 404 ─────────────────────────────────────────────────
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
@@ -117,6 +151,14 @@ router.beforeEach(async (to) => {
 
   if (to.meta.guest && auth.isAuthenticated) {
     return { name: 'dashboard' }
+  }
+
+  const requiredRoles = to.meta.requiresRole as string[] | undefined
+  if (requiredRoles?.length) {
+    const role = auth.user?.role
+    if (!role || !requiredRoles.includes(role)) {
+      return { name: 'dashboard' }
+    }
   }
 
   return true

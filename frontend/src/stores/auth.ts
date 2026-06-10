@@ -7,6 +7,7 @@ interface User {
   id: string
   email: string
   name: string
+  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
   plan: 'FREE' | 'PRO' | 'PREMIUM'
   planExpiresAt?: string
   businesses?: any[]
@@ -20,6 +21,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const isPro = computed(() => user.value?.plan === 'PRO' || user.value?.plan === 'PREMIUM')
   const isPremium = computed(() => user.value?.plan === 'PREMIUM')
+  const isAdmin = computed(() => user.value?.role === 'ADMIN' || user.value?.role === 'SUPER_ADMIN')
+  const isSuperAdmin = computed(() => user.value?.role === 'SUPER_ADMIN')
 
   async function login(email: string, password: string) {
     loading.value = true
@@ -63,5 +66,5 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('qrmenu_token')
   }
 
-  return { user, token, loading, isAuthenticated, isPro, isPremium, login, register, fetchMe, logout }
+  return { user, token, loading, isAuthenticated, isPro, isPremium, isAdmin, isSuperAdmin, login, register, fetchMe, logout }
 })
